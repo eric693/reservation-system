@@ -4,7 +4,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ToastProvider } from '@/components/ui/Toast';
 
-const navItems = [
+// adminOnly: hidden from staff role
+const navItems: { href: string; label: string; adminOnly?: boolean; children?: { href: string; label: string }[] }[] = [
   { href: '/admin', label: '控制台' },
   { href: '/admin/appointments', label: '預約管理', children: [
     { href: '/admin/appointments/list', label: '預約列表' },
@@ -14,18 +15,18 @@ const navItems = [
   { href: '/admin/services', label: '服務管理' },
   { href: '/admin/packages', label: '套票管理' },
   { href: '/admin/portfolio', label: '作品集' },
-  { href: '/admin/staff', label: '員工列表' },
+  { href: '/admin/staff', label: '員工列表', adminOnly: true },
   { href: '/admin/schedules', label: '員工排班' },
   { href: '/admin/customers', label: '顧客管理' },
   { href: '/admin/inventory', label: '庫存管理' },
-  { href: '/admin/marketing', label: '自動行銷' },
-  { href: '/admin/coupons', label: '優惠券管理' },
-  { href: '/admin/reviews', label: '評價管理' },
+  { href: '/admin/marketing', label: '自動行銷', adminOnly: true },
+  { href: '/admin/coupons', label: '優惠券管理', adminOnly: true },
+  { href: '/admin/reviews', label: '評價管理', adminOnly: true },
   { href: '/admin/blocked-slots', label: '封鎖時段' },
-  { href: '/admin/reports', label: '報表列表' },
-  { href: '/admin/settings', label: '商家設定' },
-  { href: '/admin/announcements', label: '公告列表' },
-  { href: '/admin/users', label: '帳號管理' },
+  { href: '/admin/reports', label: '報表列表', adminOnly: true },
+  { href: '/admin/settings', label: '商家設定', adminOnly: true },
+  { href: '/admin/announcements', label: '公告列表', adminOnly: true },
+  { href: '/admin/users', label: '帳號管理', adminOnly: true },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -90,7 +91,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <span className="text-white font-semibold text-lg">{user?.name || '美甲'}</span>
       </div>
       <nav className="flex-1 overflow-y-auto py-2">
-        {navItems.map(item => {
+        {navItems.filter(item => !item.adminOnly || user?.role === 'admin').map(item => {
           const isActive = pathname === item.href || (item.children && item.children.some(c => pathname === c.href));
           const isExpanded = expandedNav === item.href;
           return (

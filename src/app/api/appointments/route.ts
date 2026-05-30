@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   let query = `
     SELECT a.id, a.customer_name, a.customer_phone, a.customer_user_id,
            a.staff_id, a.service_id, a.date, a.start_time, a.end_time,
-           a.status, a.notes, a.created_at,
+           a.status, a.notes, a.created_at, a.coupon_id, a.discount_amount,
            s.name as staff_name, s.username as staff_username,
            sv.name as service_name, sv.duration, sv.price
     FROM appointments a

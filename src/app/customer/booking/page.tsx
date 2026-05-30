@@ -22,6 +22,10 @@ export default function BookingPage() {
   const [couponResult, setCouponResult] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [waitlistForm, setWaitlistForm] = useState({ name: '', phone: '' });
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistDone, setWaitlistDone] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -62,6 +66,21 @@ export default function BookingPage() {
 
   const prevMonth = () => setViewMonth(d => new Date(d.getFullYear(), d.getMonth() - 1));
   const nextMonth = () => setViewMonth(d => new Date(d.getFullYear(), d.getMonth() + 1));
+
+  const submitWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWaitlistLoading(true);
+    const res = await fetch('/api/waitlist', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer_name: waitlistForm.name, customer_phone: waitlistForm.phone,
+        staff_id: selected.staff?.id || null, service_id: selected.service?.id || null,
+        preferred_date: selected.date,
+      }),
+    });
+    setWaitlistLoading(false);
+    if (res.ok) { setWaitlistDone(true); setTimeout(() => { setShowWaitlist(false); setWaitlistDone(false); }, 2000); }
+  };
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -220,7 +239,7 @@ export default function BookingPage() {
                 ) : slots.length === 0 ? (
                   <div className="text-center py-6">
                     <p className="text-sm text-gray-400 mb-2">此日期無可用時段</p>
-                    <button onClick={() => {/* TODO: waitlist */}} className="text-xs text-blue-500 underline">加入候補名單</button>
+                    <button onClick={() => { setWaitlistForm({ name: form.name, phone: form.phone }); setShowWaitlist(true); }} className="text-xs text-blue-500 underline">加入候補名單</button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-4 gap-2">
@@ -324,6 +343,44 @@ export default function BookingPage() {
           </div>
         )}
       </div>
+
+      {/* Waitlist Modal */}
+      {showWaitlist && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            {waitlistDone ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: '#E6F4EA' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <p className="font-semibold text-gray-800">已加入候補！</p>
+                <p className="text-sm text-gray-400 mt-1">有空位時我們將通知您</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg">加入候補名單</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">{selected.date}・{selected.service?.name}</p>
+                  </div>
+                  <button onClick={() => setShowWaitlist(false)} className="text-gray-400 p-1">✕</button>
+                </div>
+                <form onSubmit={submitWaitlist} className="space-y-3">
+                  <input required className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-600"
+                    placeholder="姓名 *" value={waitlistForm.name} onChange={e => setWaitlistForm(f => ({ ...f, name: e.target.value }))} />
+                  <input required className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-600"
+                    placeholder="電話 *" value={waitlistForm.phone} onChange={e => setWaitlistForm(f => ({ ...f, phone: e.target.value }))} />
+                  <button type="submit" disabled={waitlistLoading}
+                    className="w-full py-3 text-white rounded-2xl text-sm font-semibold"
+                    style={{ background: '#8B7355', opacity: waitlistLoading ? 0.7 : 1 }}>
+                    {waitlistLoading ? '送出中...' : '確認加入候補'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,10 @@ function AppointmentList() {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const success = searchParams.get('success');
+  const [reviewApt, setReviewApt] = useState<any>(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewedIds, setReviewedIds] = useState<Set<number>>(new Set());
 
   const fetchApts = () => {
     setLoading(true);
@@ -34,6 +38,21 @@ function AppointmentList() {
     if (!confirm('確定要取消此預約嗎？')) return;
     await fetch(`/api/appointments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled_customer' }) });
     fetchApts();
+  };
+
+  const submitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewApt) return;
+    setReviewLoading(true);
+    const res = await fetch('/api/reviews', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointment_id: reviewApt.id, rating: reviewForm.rating, comment: reviewForm.comment }),
+    });
+    setReviewLoading(false);
+    if (res.ok) {
+      setReviewedIds(s => new Set([...s, reviewApt.id]));
+      setReviewApt(null);
+    }
   };
 
   return (
@@ -92,16 +111,73 @@ function AppointmentList() {
               <span>{apt.date}</span>
               <span>{apt.start_time} – {apt.end_time}</span>
             </div>
-            {apt.price > 0 && <div className="text-sm font-semibold mt-1" style={{ color: '#8B7355' }}>NT$ {apt.price.toLocaleString()}</div>}
-            {['pending', 'confirmed'].includes(apt.status) && (
-              <button onClick={() => cancel(apt.id)} className="mt-3 flex items-center gap-1.5 px-4 py-1.5 text-sm text-red-500 border border-red-200 rounded-xl hover:bg-red-50">
-                <IconX size={14} color="#EF4444" />
-                取消預約
-              </button>
+            {apt.price > 0 && (
+              <div className="text-sm mt-1">
+                {apt.discount_amount > 0 ? (
+                  <span>
+                    <span className="line-through text-gray-300 mr-1">NT$ {apt.price.toLocaleString()}</span>
+                    <span className="font-semibold" style={{ color: '#8B7355' }}>NT$ {(apt.price - apt.discount_amount).toLocaleString()}</span>
+                    <span className="text-xs text-green-500 ml-1">(-{apt.discount_amount.toLocaleString()})</span>
+                  </span>
+                ) : (
+                  <span className="font-semibold" style={{ color: '#8B7355' }}>NT$ {apt.price.toLocaleString()}</span>
+                )}
+              </div>
             )}
+            <div className="flex gap-2 mt-3">
+              {['pending', 'confirmed'].includes(apt.status) && (
+                <button onClick={() => cancel(apt.id)} className="flex items-center gap-1.5 px-4 py-1.5 text-sm text-red-500 border border-red-200 rounded-xl hover:bg-red-50">
+                  <IconX size={14} color="#EF4444" />
+                  取消預約
+                </button>
+              )}
+              {apt.status === 'completed' && !reviewedIds.has(apt.id) && (
+                <button onClick={() => { setReviewApt(apt); setReviewForm({ rating: 5, comment: '' }); }}
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-sm text-amber-600 border border-amber-200 rounded-xl hover:bg-amber-50">
+                  ★ 寫評價
+                </button>
+              )}
+              {apt.status === 'completed' && reviewedIds.has(apt.id) && (
+                <span className="text-xs text-gray-400 self-center">已評價，謝謝 ✓</span>
+              )}
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Review Modal */}
+      {reviewApt && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-bold text-lg">為本次服務評分</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{reviewApt.service_name}・{reviewApt.staff_name}</p>
+              </div>
+              <button onClick={() => setReviewApt(null)} className="text-gray-400 p-1">✕</button>
+            </div>
+            <form onSubmit={submitReview} className="space-y-4">
+              <div className="flex justify-center gap-2">
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} type="button" onClick={() => setReviewForm(f => ({ ...f, rating: n }))}
+                    className="text-3xl transition-transform hover:scale-110">
+                    <span style={{ color: n <= reviewForm.rating ? '#F59E0B' : '#D1D5DB' }}>★</span>
+                  </button>
+                ))}
+              </div>
+              <textarea
+                className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-600 resize-none"
+                placeholder="分享您的使用心得（選填）" rows={3}
+                value={reviewForm.comment} onChange={e => setReviewForm(f => ({ ...f, comment: e.target.value }))} />
+              <button type="submit" disabled={reviewLoading}
+                className="w-full py-3 text-white rounded-2xl text-sm font-semibold"
+                style={{ background: '#8B7355', opacity: reviewLoading ? 0.7 : 1 }}>
+                {reviewLoading ? '送出中...' : '送出評價'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { IconPlus, IconSearch, IconRefresh } from '@/components/ui/Icons';
+import { useToast } from '@/components/ui/Toast';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: '#F59E0B', confirmed: '#3B82F6', checkedin: '#10B981',
@@ -19,6 +20,7 @@ export default function AppointmentListPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const fetchApts = () => {
     let url = '/api/appointments?';
@@ -34,6 +36,7 @@ export default function AppointmentListPage() {
 
   const updateStatus = async (id: number, status: string) => {
     await fetch(`/api/appointments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    toast(STATUS_LABELS[status] + ' 已更新', 'success');
     fetchApts();
   };
 
@@ -42,7 +45,7 @@ export default function AppointmentListPage() {
     const res = await fetch('/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { alert(data.error || '新增失敗'); return; }
+    if (!res.ok) { toast(data.error || '新增失敗', 'error'); return; }
     setShowForm(false);
     setForm({ customer_name: '', customer_phone: '', staff_id: '', service_id: '', date: '', start_time: '', notes: '' });
     fetchApts();

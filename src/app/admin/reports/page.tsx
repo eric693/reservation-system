@@ -3,35 +3,45 @@ import { useState, useEffect } from 'react';
 
 function DailyChart({ apts, days }: { apts: any[]; days: number }) {
   const today = new Date();
-  const labels: string[] = [];
+  const buckets: { key: string; label: string }[] = [];
   const countMap: Record<string, number> = {};
-  const revenueMap: Record<string, number> = {};
 
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    const label = days <= 7 ? `${d.getMonth() + 1}/${d.getDate()}` : days <= 31 ? `${d.getDate()}` : `${d.getMonth() + 1}月`;
-    labels.push(label);
-    countMap[key] = 0;
-    revenueMap[key] = 0;
+  if (days >= 365) {
+    // Group by month (12 buckets)
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      buckets.push({ key, label: `${d.getMonth() + 1}月` });
+      countMap[key] = 0;
+    }
+    apts.forEach((a: any) => {
+      const key = a.date?.slice(0, 7);
+      if (key && countMap[key] !== undefined) countMap[key]++;
+    });
+  } else {
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      const label = days <= 7 ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getDate()}`;
+      buckets.push({ key, label });
+      countMap[key] = 0;
+    }
+    apts.forEach((a: any) => {
+      if (a.date && countMap[a.date] !== undefined) countMap[a.date]++;
+    });
   }
 
-  apts.forEach((a: any) => {
-    if (countMap[a.date] !== undefined) countMap[a.date]++;
-    if (a.status === 'completed' && revenueMap[a.date] !== undefined) revenueMap[a.date] += a.price || 0;
-  });
-
-  const counts = Object.values(countMap);
+  const counts = buckets.map(b => countMap[b.key]);
+  const labels = buckets.map(b => b.label);
   const maxCount = Math.max(...counts, 1);
-  const chartHeight = 80;
 
   return (
     <div>
       <div className="flex items-end gap-1 h-20 mb-1">
         {counts.map((c, i) => (
           <div key={i} className="flex-1 rounded-t transition-all"
-            style={{ height: `${(c / maxCount) * chartHeight}px`, background: '#8B7355', minHeight: c > 0 ? '4px' : '0', opacity: 0.8 }}
+            style={{ height: `${(c / maxCount) * 80}px`, background: '#8B7355', minHeight: c > 0 ? '4px' : '0', opacity: 0.8 }}
             title={`${labels[i]}: ${c} 筆`} />
         ))}
       </div>
