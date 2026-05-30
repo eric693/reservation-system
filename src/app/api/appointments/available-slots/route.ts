@@ -4,15 +4,29 @@ import { getDb } from '@/lib/db';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get('date');
-  const staffId = searchParams.get('staffId');
+  const staffIdRaw = searchParams.get('staffId');
   const serviceDuration = parseInt(searchParams.get('duration') || '60');
 
-  if (!date || !staffId) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+  if (!date || !staffIdRaw || isNaN(Number(staffIdRaw))) {
+    return NextResponse.json({ error: 'Missing or invalid params' }, { status: 400 });
+  }
+  const staffId = Number(staffIdRaw);
 
   const db = getDb();
-  const openTime = (db.prepare("SELECT value FROM store_settings WHERE key = 'open_time'").get() as any)?.value || '09:00';
-  const closeTime = (db.prepare("SELECT value FROM store_settings WHERE key = 'close_time'").get() as any)?.value || '21:00';
+
+  // Check staff schedule for this date — fall back to store hours if no entry
+  const schedule = db.prepare('SELECT * FROM staff_schedules WHERE staff_id = ? AND date = ?').get(staffId, date) as any;
+  if (schedule && schedule.is_working === 0) {
+    return NextResponse.json([]); // Staff is off today
+  }
+
+  const storeOpen = (db.prepare("SELECT value FROM store_settings WHERE key = 'open_time'").get() as any)?.value || '09:00';
+  const storeClose = (db.prepare("SELECT value FROM store_settings WHERE key = 'close_time'").get() as any)?.value || '21:00';
   const interval = parseInt((db.prepare("SELECT value FROM store_settings WHERE key = 'slot_interval'").get() as any)?.value || '30');
+
+  // Use staff-specific hours if set, otherwise store hours
+  const openTime = schedule?.work_start || storeOpen;
+  const closeTime = schedule?.work_end || storeClose;
 
   const bookedSlots = db.prepare(`
     SELECT start_time, end_time FROM appointments

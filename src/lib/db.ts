@@ -92,6 +92,7 @@ function initializeSchema(db: Database.Database) {
       title TEXT NOT NULL,
       content TEXT NOT NULL,
       image_url TEXT,
+      is_pinned INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -121,7 +122,132 @@ function initializeSchema(db: Database.Database) {
       is_blocked INTEGER DEFAULT 0,
       note TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS waitlist (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT NOT NULL,
+      customer_user_id INTEGER REFERENCES users(id),
+      staff_id INTEGER REFERENCES staff(id),
+      service_id INTEGER REFERENCES services(id),
+      preferred_date TEXT NOT NULL,
+      preferred_time_start TEXT DEFAULT '09:00',
+      preferred_time_end TEXT DEFAULT '21:00',
+      status TEXT DEFAULT 'waiting',
+      notified_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS member_packages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      service_id INTEGER REFERENCES services(id),
+      total_sessions INTEGER NOT NULL,
+      bonus_sessions INTEGER DEFAULT 0,
+      price INTEGER NOT NULL,
+      valid_days INTEGER DEFAULT 365,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS customer_packages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_user_id INTEGER NOT NULL REFERENCES users(id),
+      package_id INTEGER NOT NULL REFERENCES member_packages(id),
+      total_sessions INTEGER NOT NULL,
+      used_sessions INTEGER DEFAULT 0,
+      purchase_date TEXT DEFAULT (datetime('now')),
+      expiry_date TEXT,
+      status TEXT DEFAULT 'active'
+    );
+
+    CREATE TABLE IF NOT EXISTS customer_credits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_user_id INTEGER NOT NULL REFERENCES users(id),
+      amount INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      description TEXT,
+      balance_after INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS staff_schedules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      staff_id INTEGER NOT NULL REFERENCES staff(id),
+      date TEXT NOT NULL,
+      is_working INTEGER DEFAULT 1,
+      work_start TEXT DEFAULT '10:00',
+      work_end TEXT DEFAULT '21:00',
+      note TEXT,
+      UNIQUE(staff_id, date)
+    );
+
+    CREATE TABLE IF NOT EXISTS portfolio_bookmarks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_user_id INTEGER NOT NULL REFERENCES users(id),
+      portfolio_id INTEGER NOT NULL REFERENCES portfolio(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(customer_user_id, portfolio_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS inventory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT DEFAULT '甲油',
+      unit TEXT DEFAULT '瓶',
+      quantity REAL DEFAULT 0,
+      min_quantity REAL DEFAULT 5,
+      cost INTEGER DEFAULT 0,
+      supplier TEXT,
+      note TEXT,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS inventory_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      inventory_id INTEGER NOT NULL REFERENCES inventory(id),
+      change_amount REAL NOT NULL,
+      type TEXT NOT NULL,
+      note TEXT,
+      staff_id INTEGER REFERENCES staff(id),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS marketing_tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      trigger_days INTEGER,
+      message TEXT NOT NULL,
+      discount_percent INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      last_run TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS marketing_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      task_id INTEGER REFERENCES marketing_tasks(id),
+      customer_user_id INTEGER REFERENCES users(id),
+      customer_name TEXT,
+      message TEXT,
+      sent_at TEXT DEFAULT (datetime('now')),
+      status TEXT DEFAULT 'sent'
+    );
+
   `);
+
+  // Add columns that may not exist in older DBs
+  const safeAlter = (sql: string) => { try { db.exec(sql); } catch {} };
+  safeAlter("ALTER TABLE users ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))");
+  safeAlter("ALTER TABLE users ADD COLUMN notes TEXT DEFAULT ''");
+  safeAlter("ALTER TABLE users ADD COLUMN is_vip INTEGER DEFAULT 0");
+  safeAlter("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1");
+  safeAlter("ALTER TABLE announcements ADD COLUMN is_pinned INTEGER DEFAULT 0");
+  safeAlter("ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER DEFAULT 0");
 
   // Seed default data if empty
   const userCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;
@@ -136,39 +262,41 @@ function seedData(db: Database.Database) {
   const custHash = bcrypt.hashSync('customer123', 10);
 
   db.prepare(`INSERT INTO users (email, password_hash, name, phone, role) VALUES (?, ?, ?, ?, ?)`).run(
-    'admin@salon.com', hash, 'hao', '0900000000', 'admin'
+    'admin@salon.com', hash, '雅婷', '0900000000', 'admin'
   );
   db.prepare(`INSERT INTO users (email, password_hash, name, phone, role) VALUES (?, ?, ?, ?, ?)`).run(
-    'hao1@salon.com', hash, 'hao1', '0911111111', 'staff'
+    'xiaowen@salon.com', hash, '小雯', '0911111111', 'staff'
   );
   db.prepare(`INSERT INTO users (email, password_hash, name, phone, role) VALUES (?, ?, ?, ?, ?)`).run(
-    'customer@salon.com', custHash, '小明', '0900000000', 'customer'
+    'customer@salon.com', custHash, '小明', '0912345678', 'customer'
   );
 
-  db.prepare(`INSERT INTO staff (user_id, name, username) VALUES (?, ?, ?)`).run(1, 'hao', 'hao');
-  db.prepare(`INSERT INTO staff (user_id, name, username) VALUES (?, ?, ?)`).run(2, 'hao1', 'hao1');
+  db.prepare(`INSERT INTO staff (user_id, name, username) VALUES (?, ?, ?)`).run(1, '雅婷', 'yating');
+  db.prepare(`INSERT INTO staff (user_id, name, username) VALUES (?, ?, ?)`).run(2, '小雯', 'xiaowen');
 
-  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run(
-    '美甲', '基礎美甲服務', 60, 800, '美甲'
-  );
-  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run(
-    '指定造型', '客製化指定造型設計', 180, 2000, '造型'
-  );
+  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run('基礎美甲', '單色、法式、漸層等基礎款式', 60, 800, '美甲');
+  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run('客製造型', '依需求設計獨特款式，含手繪/貼鑽/3D', 180, 2000, '造型');
+  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run('光療卸甲', '專業卸除凝膠光療，含護甲保養', 60, 400, '保養');
+  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run('手部護理', '磨砂去角質 + 保濕按摩 + 上油', 45, 500, '保養');
+  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run('凝膠延甲', '鋼片/玻璃纖維延甲，附基礎彩繪', 150, 1500, '延甲');
+  db.prepare(`INSERT INTO services (name, description, duration, price, category) VALUES (?, ?, ?, ?, ?)`).run('腳部美甲', '修甲 + 基礎彩繪（足部）', 60, 700, '足部');
 
-  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('store_name', '美甲');
+  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('store_name', '雅婷美甲工作室');
+  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('logo_text', '美');
+  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('banner_url', 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&h=400&fit=crop');
   db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('address', '台北市信義區信義路五段7號');
   db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('phone', '02-2345-6789');
-  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('email', 'info@delicious-store.com');
-  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('open_time', '09:00');
+  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('email', 'info@yating-nail.com');
+  db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('open_time', '10:00');
   db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('close_time', '21:00');
   db.prepare(`INSERT INTO store_settings (key, value) VALUES (?, ?)`).run('slot_interval', '30');
 
-  db.prepare(`INSERT INTO portfolio (title, image_url, style, staff_id) VALUES (?, ?, ?, ?)`).run(
-    '美甲作品二', '/images/nail2.jpg', '美甲風格二', 1
-  );
-  db.prepare(`INSERT INTO portfolio (title, image_url, style, staff_id) VALUES (?, ?, ?, ?)`).run(
-    '美甲作品一', '/images/nail1.jpg', '美甲風格一', 1
-  );
+  const portfolioInsert = db.prepare(`INSERT INTO portfolio (title, image_url, style, staff_id, views) VALUES (?, ?, ?, ?, ?)`);
+  portfolioInsert.run('深棕流星美甲', 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=600&fit=crop', '深色系', 1, 47);
+  portfolioInsert.run('裸粉珍珠光療', 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&h=600&fit=crop', '裸色系', 1, 27);
+  portfolioInsert.run('灰藍霧面質感', 'https://images.unsplash.com/photo-1516914589923-f105f1535f88?w=600&h=600&fit=crop', '霧面系', 2, 34);
+  portfolioInsert.run('莫蘭迪粉霧光', 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&h=600&fit=crop', '裸色系', 1, 58);
+  portfolioInsert.run('法式白尖貓眼', 'https://images.unsplash.com/photo-1607779097040-26e80aa78e66?w=600&h=600&fit=crop', '法式系', 2, 71);
 
   // Seed some appointments for demo
   const today = new Date().toISOString().split('T')[0];

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { IconCalendar, IconScissors, IconImage, IconChevronRight, IconUser } from '@/components/ui/Icons';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -27,7 +28,6 @@ export default function ProfilePage() {
         <h1 className="font-semibold text-gray-800 text-center">我的</h1>
       </div>
       <div className="p-4 space-y-4">
-        {/* User card */}
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ background: '#8B7355' }}>
@@ -50,17 +50,17 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Menu items */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {[
-            { href: '/customer/my-appointments', icon: '📋', label: '我的預約' },
-            { href: '/customer/services', icon: '✂', label: '服務項目' },
-            { href: '/customer/portfolio', icon: '🖼', label: '作品集' },
-          ].map(item => (
-            <Link key={item.href} href={item.href} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50">
-              <span className="text-xl">{item.icon}</span>
-              <span className="flex-1 text-sm font-medium">{item.label}</span>
-              <span className="text-gray-300">›</span>
+            { href: '/customer/my-appointments', Icon: IconCalendar, label: '我的預約' },
+            { href: '/customer/services', Icon: IconScissors, label: '服務項目' },
+            { href: '/customer/portfolio', Icon: IconImage, label: '作品集' },
+            { href: '/customer/account', Icon: IconUser, label: '帳號設定' },
+          ].map(({ href, Icon, label }) => (
+            <Link key={href} href={href} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50">
+              <Icon size={20} color="#8B7355" />
+              <span className="flex-1 text-sm font-medium text-gray-700">{label}</span>
+              <IconChevronRight size={16} color="#D1D5DB" />
             </Link>
           ))}
         </div>

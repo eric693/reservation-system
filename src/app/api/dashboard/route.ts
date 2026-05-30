@@ -32,7 +32,7 @@ export async function GET() {
     FROM appointments a
     JOIN staff s ON a.staff_id = s.id
     JOIN services sv ON a.service_id = sv.id
-    WHERE a.status = 'pending' AND (a.date > ? OR (a.date = ? AND a.start_time > time('now', 'localtime')))
+    WHERE a.status IN ('pending','confirmed') AND (a.date > ? OR (a.date = ? AND a.start_time > strftime('%H:%M', 'now', 'localtime')))
     ORDER BY a.date ASC, a.start_time ASC LIMIT 1
   `).get(today, today);
 

@@ -92,7 +92,7 @@ export default function BookingPage() {
                   <div>
                     <div className="font-semibold">{s.name}</div>
                     <div className="text-sm text-gray-500 mt-0.5">{s.description}</div>
-                    <div className="text-xs text-gray-400 mt-1">⏱ {s.duration} 分鐘</div>
+                    <div className="text-xs text-gray-400 mt-1">時長：{s.duration} 分鐘</div>
                   </div>
                   <div className="font-semibold text-sm" style={{ color: '#8B7355' }}>NT$ {s.price.toLocaleString()}</div>
                 </div>

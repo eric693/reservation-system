@@ -129,13 +129,15 @@ export default function CalendarPage() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-bold text-lg">{selectedApt.customer_name}</h3>
-              <button onClick={() => setSelectedApt(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <button onClick={() => setSelectedApt(null)} className="text-gray-400 hover:text-gray-600">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
             <div className="space-y-2 text-sm text-gray-600 mb-4">
-              <div>📅 {selectedApt.date} {selectedApt.start_time} – {selectedApt.end_time}</div>
-              <div>✂ {selectedApt.service_name}</div>
-              <div>👤 設計師：{selectedApt.staff_name}</div>
-              <div>📞 {selectedApt.customer_phone}</div>
+              <div>{selectedApt.date} {selectedApt.start_time} – {selectedApt.end_time}</div>
+              <div>服務：{selectedApt.service_name}</div>
+              <div>設計師：{selectedApt.staff_name}</div>
+              <div>電話：{selectedApt.customer_phone}</div>
               <div>狀態：<span className="px-2 py-0.5 rounded-full text-xs" style={{ background: STATUS_COLORS[selectedApt.status] + '20', color: STATUS_COLORS[selectedApt.status] }}>{STATUS_LABELS[selectedApt.status]}</span></div>
             </div>
             {!['completed','cancelled_customer','cancelled_store','cancelled'].includes(selectedApt.status) && (
