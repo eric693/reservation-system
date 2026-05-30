@@ -249,6 +249,21 @@ function initializeSchema(db: Database.Database) {
   safeAlter("ALTER TABLE announcements ADD COLUMN is_pinned INTEGER DEFAULT 0");
   safeAlter("ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER DEFAULT 0");
 
+  // Performance indexes
+  const idx = (sql: string) => { try { db.exec(sql); } catch {} };
+  idx('CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)');
+  idx('CREATE INDEX IF NOT EXISTS idx_appointments_staff_date ON appointments(staff_id, date)');
+  idx('CREATE INDEX IF NOT EXISTS idx_appointments_customer ON appointments(customer_user_id)');
+  idx('CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)');
+  idx('CREATE INDEX IF NOT EXISTS idx_portfolio_active ON portfolio(is_active)');
+  idx('CREATE INDEX IF NOT EXISTS idx_services_active ON services(is_active)');
+  idx('CREATE INDEX IF NOT EXISTS idx_staff_active ON staff(is_active)');
+  idx('CREATE INDEX IF NOT EXISTS idx_waitlist_status ON waitlist(status, preferred_date)');
+  idx('CREATE INDEX IF NOT EXISTS idx_marketing_logs_task ON marketing_logs(task_id, sent_at)');
+  idx('CREATE INDEX IF NOT EXISTS idx_customer_packages_user ON customer_packages(customer_user_id)');
+  idx('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
+  idx('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
+
   // Seed default data if empty
   const userCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;
   if (userCount === 0) {

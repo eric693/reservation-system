@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useToast } from '@/components/ui/Toast';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '待確認', confirmed: '已確認', checkedin: '已到店',
@@ -12,12 +13,21 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
+  const toast = useToast();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = () => fetch('/api/dashboard').then(r => r.json()).then(setData);
-  useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    fetchData();
+    // Auto-refresh every 60 seconds
+    intervalRef.current = setInterval(fetchData, 60000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
 
   const updateStatus = async (id: number, status: string) => {
     await fetch(`/api/appointments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    toast(STATUS_LABELS[status] + ' 已更新', 'success');
     fetchData();
   };
 

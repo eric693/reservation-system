@@ -3,13 +3,28 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { IconMapPin, IconPhone, IconMail, IconScissors, IconUser, IconClock, IconCheck, IconCalendar, IconList } from '@/components/ui/Icons';
 
+const STATUS_COLORS: Record<string, string> = {
+  pending: '#F59E0B', confirmed: '#3B82F6', checkedin: '#10B981', completed: '#8B5CF6'
+};
+const STATUS_LABELS: Record<string, string> = {
+  pending: '待確認', confirmed: '已確認', checkedin: '已到店', completed: '已完成'
+};
+
 export default function CustomerHome() {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [upcomingApts, setUpcomingApts] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/store-settings').then(r => r.json()).then(setSettings);
     fetch('/api/announcements').then(r => r.json()).then(setAnnouncements);
+    // Load upcoming appointments
+    fetch('/api/appointments').then(r => r.ok ? r.json() : []).then(apts => {
+      const upcoming = apts.filter((a: any) => ['pending','confirmed','checkedin'].includes(a.status))
+        .sort((a: any, b: any) => a.date.localeCompare(b.date) || a.start_time.localeCompare(b.start_time))
+        .slice(0, 2);
+      setUpcomingApts(upcoming);
+    });
   }, []);
 
   return (
@@ -39,6 +54,30 @@ export default function CustomerHome() {
             <span className="text-sm font-medium text-gray-700">服務項目</span>
           </Link>
         </div>
+
+        {/* Upcoming appointments */}
+        {upcomingApts.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <h2 className="font-semibold text-gray-800">即將到來的預約</h2>
+              <Link href="/customer/my-appointments" className="text-xs" style={{ color: '#8B7355' }}>查看全部</Link>
+            </div>
+            {upcomingApts.map(apt => (
+              <div key={apt.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: STATUS_COLORS[apt.status] + '20' }}>
+                  <IconCalendar size={18} color={STATUS_COLORS[apt.status]} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-gray-800 truncate">{apt.service_name}</div>
+                  <div className="text-xs text-gray-400">{apt.date} {apt.start_time} · {apt.staff_name}</div>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full flex-shrink-0" style={{ background: STATUS_COLORS[apt.status] + '20', color: STATUS_COLORS[apt.status] }}>
+                  {STATUS_LABELS[apt.status]}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Store info — all from API */}
         <div className="bg-white rounded-2xl p-4 shadow-sm">

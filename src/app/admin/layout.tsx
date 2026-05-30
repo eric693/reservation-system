@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { ToastProvider } from '@/components/ui/Toast';
 
 const navItems = [
   { href: '/admin', label: '控制台' },
@@ -92,6 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
+    <ToastProvider>
     <div className="flex h-screen overflow-hidden" style={{ background: '#F8F5F0' }}>
       <div className="hidden md:flex md:w-48 flex-shrink-0 flex-col">
         <Sidebar />
@@ -120,5 +122,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className="flex-1 overflow-y-auto p-4">{children}</main>
       </div>
     </div>
+    </ToastProvider>
   );
 }
