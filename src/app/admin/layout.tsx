@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -19,6 +19,9 @@ const navItems = [
   { href: '/admin/customers', label: '顧客管理' },
   { href: '/admin/inventory', label: '庫存管理' },
   { href: '/admin/marketing', label: '自動行銷' },
+  { href: '/admin/coupons', label: '優惠券管理' },
+  { href: '/admin/reviews', label: '評價管理' },
+  { href: '/admin/blocked-slots', label: '封鎖時段' },
   { href: '/admin/reports', label: '報表列表' },
   { href: '/admin/settings', label: '商家設定' },
   { href: '/admin/announcements', label: '公告列表' },
@@ -31,6 +34,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedNav, setExpandedNav] = useState<string | null>('/admin/appointments');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<any[]>([]);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => {
@@ -41,6 +48,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       });
     });
   }, [router]);
+
+  const fetchNotifs = () => {
+    fetch('/api/notifications').then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return;
+      setUnreadCount(d.unread);
+      setNotifs(d.notifications.slice(0, 10));
+    });
+  };
+
+  useEffect(() => {
+    fetchNotifs();
+    const t = setInterval(fetchNotifs, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const markAllRead = async () => {
+    await fetch('/api/notifications/all-read', { method: 'POST' });
+    fetchNotifs();
+  };
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -111,7 +145,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
           <div className="flex-1" />
           {user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <div className="relative" ref={notifRef}>
+                <button onClick={() => setNotifOpen(o => !o)} className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center font-bold" style={{ background: '#EF4444' }}>
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <div className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100">
+                      <span className="font-semibold text-sm text-gray-800">通知</span>
+                      {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-blue-500 hover:underline">全部標為已讀</button>}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifs.length === 0 ? (
+                        <div className="py-8 text-center text-gray-400 text-sm">無新通知</div>
+                      ) : notifs.map(n => (
+                        <div key={n.id} className={`px-4 py-3 border-b border-gray-50 text-sm ${!n.is_read ? 'bg-amber-50' : ''}`}>
+                          <div className="font-medium text-gray-800">{n.title}</div>
+                          <div className="text-gray-500 text-xs mt-0.5">{n.body}</div>
+                          <div className="text-gray-300 text-xs mt-0.5">{n.created_at?.slice(0,16).replace('T',' ')}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium" style={{ background: '#8B7355' }}>
                 {user.name[0].toUpperCase()}
               </div>

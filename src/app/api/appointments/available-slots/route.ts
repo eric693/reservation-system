@@ -31,7 +31,10 @@ export async function GET(req: NextRequest) {
   const bookedSlots = db.prepare(`
     SELECT start_time, end_time FROM appointments
     WHERE staff_id = ? AND date = ? AND status NOT IN ('cancelled_customer','cancelled_store','cancelled')
-  `).all(staffId, date) as any[];
+    UNION
+    SELECT start_time, end_time FROM blocked_slots
+    WHERE (staff_id = ? OR staff_id IS NULL) AND date = ?
+  `).all(staffId, date, staffId, date) as any[];
 
   const toMinutes = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
   const toTime = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;

@@ -238,6 +238,62 @@ function initializeSchema(db: Database.Database) {
       status TEXT DEFAULT 'sent'
     );
 
+    CREATE TABLE IF NOT EXISTS coupons (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('percent','fixed')),
+      value REAL NOT NULL,
+      min_amount REAL DEFAULT 0,
+      max_uses INTEGER DEFAULT 0,
+      used_count INTEGER DEFAULT 0,
+      valid_from TEXT,
+      valid_until TEXT,
+      service_id INTEGER REFERENCES services(id),
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS coupon_uses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      coupon_id INTEGER NOT NULL REFERENCES coupons(id),
+      customer_user_id INTEGER REFERENCES users(id),
+      appointment_id INTEGER REFERENCES appointments(id),
+      used_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      appointment_id INTEGER NOT NULL REFERENCES appointments(id),
+      customer_user_id INTEGER REFERENCES users(id),
+      staff_id INTEGER REFERENCES staff(id),
+      rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+      comment TEXT DEFAULT '',
+      is_public INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS blocked_slots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      staff_id INTEGER REFERENCES staff(id),
+      date TEXT NOT NULL,
+      start_time TEXT NOT NULL,
+      end_time TEXT NOT NULL,
+      reason TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      type TEXT DEFAULT 'info',
+      link TEXT DEFAULT '',
+      is_read INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
   `);
 
   // Add columns that may not exist in older DBs
@@ -248,6 +304,9 @@ function initializeSchema(db: Database.Database) {
   safeAlter("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1");
   safeAlter("ALTER TABLE announcements ADD COLUMN is_pinned INTEGER DEFAULT 0");
   safeAlter("ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER DEFAULT 0");
+  safeAlter("ALTER TABLE appointments ADD COLUMN coupon_id INTEGER REFERENCES coupons(id)");
+  safeAlter("ALTER TABLE appointments ADD COLUMN discount_amount REAL DEFAULT 0");
+  safeAlter("ALTER TABLE appointments ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))");
 
   // Performance indexes
   const idx = (sql: string) => { try { db.exec(sql); } catch {} };
@@ -263,6 +322,11 @@ function initializeSchema(db: Database.Database) {
   idx('CREATE INDEX IF NOT EXISTS idx_customer_packages_user ON customer_packages(customer_user_id)');
   idx('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
   idx('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
+  idx('CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read)');
+  idx('CREATE INDEX IF NOT EXISTS idx_reviews_staff ON reviews(staff_id, is_public)');
+  idx('CREATE INDEX IF NOT EXISTS idx_blocked_slots_date ON blocked_slots(date, staff_id)');
+  idx('CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code)');
+  idx('CREATE INDEX IF NOT EXISTS idx_coupon_uses_coupon ON coupon_uses(coupon_id, customer_user_id)');
 
   // Seed default data if empty
   const userCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;

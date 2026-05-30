@@ -39,6 +39,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const setClause = Object.keys(updates).map(k => `${k} = ?`).join(', ');
   db.prepare(`UPDATE appointments SET ${setClause}, updated_at = datetime('now') WHERE id = ?`).run(...Object.values(updates), Number(id));
+
+  // Notify customer on status change
+  if (updates.status && apt.customer_user_id) {
+    const statusMessages: Record<string, string> = {
+      confirmed: '您的預約已確認',
+      completed: '預約已完成，歡迎留下評價',
+      cancelled_store: '店家已取消您的預約，請重新預約',
+      cancelled_customer: '您的預約已取消',
+    };
+    const title = statusMessages[updates.status];
+    if (title) {
+      const svcRow = db.prepare('SELECT name FROM services WHERE id = ?').get(apt.service_id) as any;
+      db.prepare('INSERT INTO notifications (user_id, title, body, type, link) VALUES (?, ?, ?, ?, ?)').run(
+        apt.customer_user_id,
+        title,
+        `${apt.date} ${apt.start_time} ${svcRow?.name || ''}`,
+        'appointment',
+        '/customer/my-appointments'
+      );
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }
 

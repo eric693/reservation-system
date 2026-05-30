@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: '格式錯誤' }, { status: 400 }); }
 
-  const { customer_name, customer_phone, staff_id, service_id, date, start_time, notes } = body;
+  const { customer_name, customer_phone, staff_id, service_id, date, start_time, notes, coupon_id, discount_amount } = body;
 
   // Validate required fields
   if (!customer_name?.trim()) return NextResponse.json({ error: '顧客姓名為必填' }, { status: 400 });
@@ -90,6 +90,17 @@ export async function POST(req: NextRequest) {
 
   const customerId = session.role === 'customer' ? session.userId : null;
 
+  // Validate coupon if provided
+  let validatedCouponId: number | null = null;
+  let validatedDiscount = 0;
+  if (coupon_id) {
+    const coupon = db.prepare('SELECT * FROM coupons WHERE id = ? AND is_active = 1').get(Number(coupon_id)) as any;
+    if (coupon) {
+      validatedCouponId = coupon.id;
+      validatedDiscount = Math.max(0, Number(discount_amount) || 0);
+    }
+  }
+
   // Wrap conflict-check + insert in a transaction to prevent race conditions
   const bookAppointment = db.transaction(() => {
     const conflict = db.prepare(`
@@ -100,8 +111,8 @@ export async function POST(req: NextRequest) {
     if (conflict) return { error: '此時段已被預約，請選擇其他時段' };
 
     const result = db.prepare(`
-      INSERT INTO appointments (customer_name, customer_phone, customer_user_id, staff_id, service_id, date, start_time, end_time, status, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+      INSERT INTO appointments (customer_name, customer_phone, customer_user_id, staff_id, service_id, date, start_time, end_time, status, notes, coupon_id, discount_amount)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
     `).run(
       customer_name.trim().slice(0, 50),
       customer_phone.trim().slice(0, 20),
@@ -111,12 +122,39 @@ export async function POST(req: NextRequest) {
       date,
       start_time,
       end_time,
-      notes?.trim().slice(0, 500) || ''
+      notes?.trim().slice(0, 500) || '',
+      validatedCouponId,
+      validatedDiscount
     ) as any;
-    return { id: result.lastInsertRowid };
+
+    const appointmentId = result.lastInsertRowid;
+
+    // Record coupon use and increment counter
+    if (validatedCouponId && customerId) {
+      db.prepare('INSERT INTO coupon_uses (coupon_id, customer_user_id, appointment_id) VALUES (?, ?, ?)').run(validatedCouponId, customerId, appointmentId);
+      db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(validatedCouponId);
+    }
+
+    return { id: appointmentId };
   });
 
   const bookResult = bookAppointment();
   if ('error' in bookResult) return NextResponse.json({ error: bookResult.error }, { status: 409 });
+
+  // Send notification to customer if logged in
+  if (customerId) {
+    const serviceName = service.name;
+    const staffName = staffRow.name;
+    db.prepare(`
+      INSERT INTO notifications (user_id, title, body, type, link)
+      VALUES (?, ?, ?, 'appointment', ?)
+    `).run(
+      customerId,
+      '預約已送出，等待確認',
+      `${date} ${start_time} ${serviceName}（設計師：${staffName}）已進入待確認狀態`,
+      '/customer/my-appointments'
+    );
+  }
+
   return NextResponse.json({ id: bookResult.id }, { status: 201 });
 }

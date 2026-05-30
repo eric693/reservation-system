@@ -18,6 +18,10 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [viewMonth, setViewMonth] = useState(() => new Date());
+  const [couponCode, setCouponCode] = useState('');
+  const [couponResult, setCouponResult] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -59,11 +63,32 @@ export default function BookingPage() {
   const prevMonth = () => setViewMonth(d => new Date(d.getFullYear(), d.getMonth() - 1));
   const nextMonth = () => setViewMonth(d => new Date(d.getFullYear(), d.getMonth() + 1));
 
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true); setCouponError(''); setCouponResult(null);
+    const res = await fetch('/api/coupons/validate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: couponCode.trim(), service_id: selected.service?.id, amount: selected.service?.price }),
+    });
+    const data = await res.json();
+    setCouponLoading(false);
+    if (!res.ok) { setCouponError(data.error || '無效優惠碼'); return; }
+    setCouponResult(data);
+  };
+
+  const removeCoupon = () => { setCouponResult(null); setCouponCode(''); setCouponError(''); };
+
   const submit = async () => {
     setLoading(true); setError('');
     const res = await fetch('/api/appointments', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customer_name: form.name, customer_phone: form.phone, staff_id: selected.staff.id, service_id: selected.service.id, date: selected.date, start_time: selected.time, notes: form.notes })
+      body: JSON.stringify({
+        customer_name: form.name, customer_phone: form.phone,
+        staff_id: selected.staff.id, service_id: selected.service.id,
+        date: selected.date, start_time: selected.time, notes: form.notes,
+        coupon_id: couponResult?.coupon_id || null,
+        discount_amount: couponResult?.discount || 0,
+      })
     });
     const data = await res.json();
     setLoading(false);
@@ -239,11 +264,47 @@ export default function BookingPage() {
                     <span className="font-medium text-gray-700">{value}</span>
                   </div>
                 ))}
+                {couponResult && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>優惠折抵（{couponResult.name}）</span>
+                    <span>- NT$ {couponResult.discount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-2 border-t border-gray-100">
-                  <span className="text-gray-400">費用</span>
-                  <span className="font-bold" style={{ color: '#8B7355' }}>NT$ {selected.service?.price.toLocaleString()}</span>
+                  <span className="text-gray-400">實付費用</span>
+                  <span className="font-bold" style={{ color: '#8B7355' }}>
+                    NT$ {(couponResult ? couponResult.final_amount : selected.service?.price).toLocaleString()}
+                  </span>
                 </div>
               </div>
+            </div>
+
+            {/* Coupon */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <h2 className="font-semibold text-gray-700 mb-3">優惠碼</h2>
+              {couponResult ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+                  <div>
+                    <span className="font-mono font-bold text-green-700">{couponCode.toUpperCase()}</span>
+                    <span className="text-green-600 text-sm ml-2">已折抵 NT$ {couponResult.discount.toLocaleString()}</span>
+                  </div>
+                  <button onClick={removeCoupon} className="text-xs text-gray-400 hover:text-red-400">移除</button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono uppercase outline-none focus:border-amber-600"
+                    placeholder="輸入優惠碼"
+                    value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
+                  />
+                  <button onClick={applyCoupon} disabled={!couponCode.trim() || couponLoading}
+                    className="px-4 py-2.5 text-white text-sm rounded-xl transition-opacity"
+                    style={{ background: '#8B7355', opacity: !couponCode.trim() ? 0.5 : 1 }}>
+                    {couponLoading ? '…' : '套用'}
+                  </button>
+                </div>
+              )}
+              {couponError && <p className="text-xs text-red-500 mt-1.5">{couponError}</p>}
             </div>
 
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
