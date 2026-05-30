@@ -4,7 +4,8 @@ import { getSession } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { searchParams } = new URL(req.url);
   const role = searchParams.get('role');
   const db = getDb();

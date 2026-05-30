@@ -30,6 +30,6 @@ export async function POST(req: NextRequest) {
     ON CONFLICT(staff_id, date) DO UPDATE SET
       is_working = excluded.is_working, work_start = excluded.work_start,
       work_end = excluded.work_end, note = excluded.note
-  `).run(staff_id, date, is_working !== false ? 1 : 0, work_start || '10:00', work_end || '21:00', note || '');
+  `).run(staff_id, date, is_working === true || is_working === 1 ? 1 : 0, work_start || '10:00', work_end || '21:00', note || '');
   return NextResponse.json({ ok: true });
 }

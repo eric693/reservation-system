@@ -12,7 +12,8 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
   const db = getDb();
   const upsert = db.prepare('INSERT INTO store_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');

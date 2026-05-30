@@ -5,7 +5,8 @@ import { getSession } from '@/lib/auth';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   const db = getDb();
   const user = db.prepare('SELECT id, name, email, phone, role, is_vip, notes, created_at FROM users WHERE id = ?').get(Number(id));
@@ -15,7 +16,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   if (isNaN(Number(id))) return NextResponse.json({ error: '無效 ID' }, { status: 400 });
 
@@ -64,7 +66,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   if (Number(id) === session.userId) return NextResponse.json({ error: '不能停用自己的帳號' }, { status: 400 });
   const db = getDb();

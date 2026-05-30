@@ -44,7 +44,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   if (isNaN(Number(id))) return NextResponse.json({ error: '無效 ID' }, { status: 400 });
   getDb().prepare('DELETE FROM appointments WHERE id = ?').run(Number(id));

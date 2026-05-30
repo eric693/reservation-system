@@ -4,7 +4,8 @@ import { getSession } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!session || session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { task_id } = await req.json();
   const db = getDb();
   const task = db.prepare('SELECT * FROM marketing_tasks WHERE id = ? AND is_active = 1').get(task_id) as any;
