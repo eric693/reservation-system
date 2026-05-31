@@ -37,7 +37,7 @@ export default function AnnouncementsPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold text-gray-800">公告列表</h1>
-        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增公告
         </button>
       </div>
@@ -48,7 +48,7 @@ export default function AnnouncementsPage() {
             <div className="flex justify-between items-start gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  {item.is_pinned === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>置頂</span>}
+                  {item.is_pinned === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: 'var(--badge-bg)', color: 'var(--badge-text)' }}>置頂</span>}
                   <h3 className="font-semibold text-gray-800">{item.title}</h3>
                 </div>
                 <p className="text-sm text-gray-500 leading-relaxed">{item.content}</p>
@@ -89,7 +89,7 @@ export default function AnnouncementsPage() {
                 <input type="checkbox" checked={form.is_pinned} onChange={e => setForm(f => ({ ...f, is_pinned: e.target.checked }))} className="rounded" />
                 置頂此公告
               </label>
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '儲存中...' : editItem ? '更新公告' : '新增公告'}
               </button>
             </form>

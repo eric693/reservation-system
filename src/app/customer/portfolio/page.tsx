@@ -34,19 +34,23 @@ export default function CustomerPortfolio() {
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/portfolio').then(r => r.json()).then(data => {
-      setItems(data);
-      const uniqueStyles = Array.from(new Set(data.map((i: any) => i.style).filter(Boolean))) as string[];
-      setStyles(uniqueStyles);
+    const url = activeStyle && activeStyle !== '全部' ? `/api/portfolio?limit=40&style=${encodeURIComponent(activeStyle)}` : '/api/portfolio?limit=40';
+    fetch(url).then(r => r.json()).then(data => {
+      const list = Array.isArray(data) ? data : (data.items || []);
+      setItems(list);
+      if (activeStyle === '全部' || !styles.length) {
+        const uniqueStyles = Array.from(new Set(list.map((i: any) => i.style).filter(Boolean))) as string[];
+        setStyles(uniqueStyles);
+      }
       setLoading(false);
     });
     fetchBookmarks();
-  }, []);
+  }, [activeStyle]);
 
-  const filtered = activeStyle === '全部' ? items : items.filter(i => i.style === activeStyle);
+  const filtered = items;
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg-neutral)' }}>
       <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10">
         <h1 className="font-semibold text-gray-800 text-center text-base">作品集</h1>
       </div>
@@ -56,7 +60,7 @@ export default function CustomerPortfolio() {
           <button key={style} onClick={() => setActiveStyle(style)}
             className="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors border"
             style={activeStyle === style
-              ? { background: '#8B7355', color: 'white', borderColor: '#8B7355' }
+              ? { background: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }
               : { background: 'white', color: '#666', borderColor: '#E5E5E5' }}>
             {style}
           </button>
@@ -71,7 +75,7 @@ export default function CustomerPortfolio() {
       <div className="p-4">
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} />
+            <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">此分類尚無作品</div>
@@ -99,7 +103,7 @@ export default function CustomerPortfolio() {
                   <h3 className="font-semibold text-sm text-gray-800">{item.title}</h3>
                   {item.staff_name && (
                     <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: '#8B7355' }}>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: 'var(--primary)' }}>
                         {item.staff_username?.[0] || item.staff_name[0]}
                       </div>
                       <span className="text-xs text-gray-500">{item.staff_name}</span>
@@ -137,7 +141,7 @@ export default function CustomerPortfolio() {
               <div className="flex items-center gap-2 mt-2">
                 {selected.staff_name && (
                   <div className="flex items-center gap-1.5">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: '#8B7355' }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: 'var(--primary)' }}>
                       {selected.staff_username?.[0] || selected.staff_name[0]}
                     </div>
                     <span className="text-sm text-gray-600">{selected.staff_name}</span>
@@ -149,7 +153,7 @@ export default function CustomerPortfolio() {
               </div>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setSelected(null)} className="flex-1 py-3 border border-gray-200 rounded-2xl text-sm text-gray-600 font-medium">關閉</button>
-                <Link href="/customer/booking" className="flex-1 py-3 text-white rounded-2xl text-sm text-center font-semibold" style={{ background: '#8B7355' }}>預約此款</Link>
+                <Link href="/customer/booking" className="flex-1 py-3 text-white rounded-2xl text-sm text-center font-semibold" style={{ background: 'var(--primary)' }}>預約此款</Link>
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const TYPE_STYLES: Record<string, { bg: string; dot: string }> = {
-  appointment: { bg: 'bg-amber-50', dot: '#8B7355' },
+  appointment: { bg: 'bg-amber-50', dot: 'var(--primary)' },
   info:        { bg: 'bg-blue-50',  dot: '#3B82F6' },
   promo:       { bg: 'bg-pink-50',  dot: '#EC4899' },
 };
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
           {(['personal', 'store'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-              style={tab === t ? { background: '#8B7355', color: 'white' } : { background: '#F3F0EB', color: '#6B7280' }}>
+              style={tab === t ? { background: 'var(--primary)', color: 'white' } : { background: '#F3F0EB', color: '#6B7280' }}>
               {t === 'personal' ? `個人通知${unread > 0 ? ` (${unread})` : ''}` : '店家公告'}
             </button>
           ))}
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
 function EmptyState() {
   return (
     <div className="text-center py-16 text-gray-400">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1C5B5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-warm)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
         <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
       </svg>
       <p>目前沒有通知</p>

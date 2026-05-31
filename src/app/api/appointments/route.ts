@@ -23,31 +23,35 @@ export async function GET(req: NextRequest) {
   if (startDate && !DATE_RE.test(startDate)) return NextResponse.json({ error: '日期格式錯誤' }, { status: 400 });
   if (endDate && !DATE_RE.test(endDate)) return NextResponse.json({ error: '日期格式錯誤' }, { status: 400 });
 
-  let query = `
-    SELECT a.id, a.customer_name, a.customer_phone, a.customer_user_id,
+  const joins = `FROM appointments a JOIN staff s ON a.staff_id = s.id JOIN services sv ON a.service_id = sv.id WHERE 1=1`;
+  let where = '';
+  const params: any[] = [];
+
+  if (session.role === 'customer') { where += ' AND a.customer_user_id = ?'; params.push(session.userId); }
+  if (date) { where += ' AND a.date = ?'; params.push(date); }
+  if (startDate) { where += ' AND a.date >= ?'; params.push(startDate); }
+  if (endDate) { where += ' AND a.date <= ?'; params.push(endDate); }
+  if (status) { where += ' AND a.status = ?'; params.push(status); }
+  if (staffId && !isNaN(Number(staffId))) { where += ' AND a.staff_id = ?'; params.push(Number(staffId)); }
+
+  const order = ' ORDER BY a.date ASC, a.start_time ASC';
+  const selectCols = `SELECT a.id, a.customer_name, a.customer_phone, a.customer_user_id,
            a.staff_id, a.service_id, a.date, a.start_time, a.end_time,
            a.status, a.notes, a.created_at, a.coupon_id, a.discount_amount,
            s.name as staff_name, s.username as staff_username,
-           sv.name as service_name, sv.duration, sv.price
-    FROM appointments a
-    JOIN staff s ON a.staff_id = s.id
-    JOIN services sv ON a.service_id = sv.id
-    WHERE 1=1
-  `;
-  const params: any[] = [];
+           sv.name as service_name, sv.duration, sv.price`;
 
-  if (session.role === 'customer') {
-    query += ' AND a.customer_user_id = ?';
-    params.push(session.userId);
+  const limitParam = searchParams.get('limit');
+  const offsetParam = searchParams.get('offset');
+  if (limitParam !== null) {
+    const limit = Math.min(Math.max(1, Number(limitParam)), 500);
+    const offset = Math.max(0, Number(offsetParam || 0));
+    const total = (db.prepare(`SELECT COUNT(*) as c ${joins}${where}`).get(...params) as any).c;
+    const appointments = db.prepare(`${selectCols} ${joins}${where}${order} LIMIT ? OFFSET ?`).all(...params, limit, offset);
+    return NextResponse.json({ appointments, total, limit, offset });
   }
-  if (date) { query += ' AND a.date = ?'; params.push(date); }
-  if (startDate) { query += ' AND a.date >= ?'; params.push(startDate); }
-  if (endDate) { query += ' AND a.date <= ?'; params.push(endDate); }
-  if (status) { query += ' AND a.status = ?'; params.push(status); }
-  if (staffId && !isNaN(Number(staffId))) { query += ' AND a.staff_id = ?'; params.push(Number(staffId)); }
 
-  query += ' ORDER BY a.date ASC, a.start_time ASC';
-  const appointments = db.prepare(query).all(...params);
+  const appointments = db.prepare(`${selectCols} ${joins}${where}${order}`).all(...params);
   return NextResponse.json(appointments);
 }
 
@@ -84,9 +88,20 @@ export async function POST(req: NextRequest) {
   const staffRow = db.prepare('SELECT * FROM staff WHERE id = ? AND is_active = 1').get(Number(staff_id)) as any;
   if (!staffRow) return NextResponse.json({ error: '設計師不存在' }, { status: 400 });
 
+  const toMinutes = (t: string) => { const [hh, mm] = t.split(':').map(Number); return hh * 60 + mm; };
   const [h, m] = start_time.split(':').map(Number);
   const endMinutes = h * 60 + m + service.duration;
   const end_time = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+
+  // Validate against store / staff hours
+  const schedule = db.prepare('SELECT * FROM staff_schedules WHERE staff_id = ? AND date = ?').get(Number(staff_id), date) as any;
+  if (schedule && schedule.is_working === 0) return NextResponse.json({ error: '該設計師當天休假' }, { status: 400 });
+  const storeClose = (db.prepare("SELECT value FROM store_settings WHERE key = 'close_time'").get() as any)?.value || '21:00';
+  const storeOpen = (db.prepare("SELECT value FROM store_settings WHERE key = 'open_time'").get() as any)?.value || '10:00';
+  const closeMin = toMinutes(schedule?.work_end || storeClose);
+  const openMin = toMinutes(schedule?.work_start || storeOpen);
+  if (toMinutes(start_time) < openMin) return NextResponse.json({ error: '開始時間早於營業時間' }, { status: 400 });
+  if (endMinutes > closeMin) return NextResponse.json({ error: '結束時間超過營業時間' }, { status: 400 });
 
   const customerId = session.role === 'customer' ? session.userId : null;
 

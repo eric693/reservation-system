@@ -13,17 +13,27 @@ export async function GET() {
   const confirmed = (db.prepare("SELECT COUNT(*) as c FROM appointments WHERE date = ? AND status IN ('confirmed','checkedin')").get(today) as any).c;
   const completed = (db.prepare("SELECT COUNT(*) as c FROM appointments WHERE date = ? AND status = 'completed'").get(today) as any).c;
 
-  // Weekly trend (last 7 days)
+  // Weekly trend (last 7 days) — single query grouped by date
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 6);
+  const weekStartStr = weekStart.toISOString().split('T')[0];
+  const weekRows = db.prepare(`
+    SELECT date,
+           COUNT(*) as count,
+           SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+    FROM appointments
+    WHERE date >= ? AND date <= ?
+    GROUP BY date
+  `).all(weekStartStr, today) as any[];
+  const weekMap: Record<string, { count: number; completed: number }> = {};
+  for (const r of weekRows) weekMap[r.date] = { count: r.count, completed: r.completed };
+
+  const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
   const weeklyTrend: any[] = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = new Date(); d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split('T')[0];
-    const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
-    const dayName = dayNames[d.getDay()];
-    const count = (db.prepare("SELECT COUNT(*) as c FROM appointments WHERE date = ?").get(dateStr) as any).c;
-    const done = (db.prepare("SELECT COUNT(*) as c FROM appointments WHERE date = ? AND status = 'completed'").get(dateStr) as any).c;
-    weeklyTrend.push({ date: dateStr, label: `週${dayName}\n${dateStr.slice(5)}`, count, completed: done });
+    const { count = 0, completed = 0 } = weekMap[dateStr] || {};
+    weeklyTrend.push({ date: dateStr, label: `週${dayNames[d.getDay()]}\n${dateStr.slice(5)}`, count, completed });
   }
 
   // Next appointment (pending, today or future)

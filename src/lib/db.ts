@@ -4,22 +4,26 @@ import fs from 'fs';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'reservation.db');
 
-// Ensure data directory exists
 const dataDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-let db: Database.Database;
+// Use globalThis to survive Next.js HMR hot-reloads in dev
+declare global {
+  // eslint-disable-next-line no-var
+  var __reservationDb: Database.Database | undefined;
+}
 
 export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(DB_PATH);
+  if (!globalThis.__reservationDb) {
+    const db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     initializeSchema(db);
+    globalThis.__reservationDb = db;
   }
-  return db;
+  return globalThis.__reservationDb;
 }
 
 function initializeSchema(db: Database.Database) {
@@ -42,7 +46,7 @@ function initializeSchema(db: Database.Database) {
       user_id INTEGER REFERENCES users(id),
       name TEXT NOT NULL,
       username TEXT UNIQUE NOT NULL,
-      avatar_color TEXT DEFAULT '#8B7355',
+      avatar_color TEXT DEFAULT 'var(--primary)',
       is_active INTEGER DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -386,6 +390,6 @@ function seedData(db: Database.Database) {
     '小明', '0900000000', 3, 1, 1, today, '18:00', '19:00', 'confirmed'
   );
   db.prepare(`INSERT INTO appointments (customer_name, customer_phone, customer_user_id, staff_id, service_id, date, start_time, end_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    '小明', '0900000000', 3, 1, 1, today, '21:30', '22:30', 'pending'
+    '小明', '0900000000', 3, 1, 1, today, '14:00', '15:00', 'pending'
   );
 }

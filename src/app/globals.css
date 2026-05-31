@@ -4,11 +4,18 @@
   --primary: #8B7355;
   --primary-light: #A0896A;
   --primary-dark: #6B5A42;
+  --primary-warm: #D4C5B0;
+  --bg-page: #F8F5F0;
+  --bg-page-end: #EDE8E0;
+  --bg-neutral: #F5F5F5;
+  --img-error-bg: #E8E0D8;
+  --badge-bg: #FEF3C7;
+  --badge-text: #92400E;
 }
 
 * { box-sizing: border-box; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', Arial, sans-serif;
-  background: #F8F5F0;
+  background: var(--bg-page);
   color: #1a1a1a;
 }

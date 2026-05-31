@@ -59,7 +59,7 @@ export default function AppointmentListPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-gray-800">預約列表</h1>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增預約
         </button>
       </div>
@@ -111,7 +111,7 @@ export default function AppointmentListPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {apt.status === 'pending' && <button onClick={() => updateStatus(apt.id, 'confirmed')} className="px-2 py-1 text-xs text-white rounded" style={{ background: '#8B7355' }}>確認</button>}
+                      {apt.status === 'pending' && <button onClick={() => updateStatus(apt.id, 'confirmed')} className="px-2 py-1 text-xs text-white rounded" style={{ background: 'var(--primary)' }}>確認</button>}
                       {apt.status === 'confirmed' && <button onClick={() => updateStatus(apt.id, 'checkedin')} className="px-2 py-1 text-xs text-white rounded" style={{ background: '#10B981' }}>到店</button>}
                       {apt.status === 'checkedin' && <button onClick={() => updateStatus(apt.id, 'completed')} className="px-2 py-1 text-xs text-white rounded" style={{ background: '#8B5CF6' }}>完成</button>}
                       {!['completed','cancelled_customer','cancelled_store','cancelled'].includes(apt.status) && (
@@ -152,7 +152,7 @@ export default function AppointmentListPage() {
               <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
               <input type="time" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} required />
               <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="備註" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '新增中...' : '新增預約'}
               </button>
             </form>

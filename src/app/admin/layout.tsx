@@ -85,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const Sidebar = () => (
     <div className="flex flex-col h-full" style={{ background: '#2C2420' }}>
       <div className="p-4 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: '#8B7355' }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--primary)' }}>
           {user?.name?.[0]?.toUpperCase() || '美'}
         </div>
         <span className="text-white font-semibold text-lg">{user?.name || '美甲'}</span>
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <ToastProvider>
-    <div className="flex h-screen overflow-hidden" style={{ background: '#F8F5F0' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-page)' }}>
       <div className="hidden md:flex md:w-48 flex-shrink-0 flex-col">
         <Sidebar />
       </div>
@@ -178,7 +178,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </div>
                 )}
               </div>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium" style={{ background: '#8B7355' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium" style={{ background: 'var(--primary)' }}>
                 {user.name[0].toUpperCase()}
               </div>
               <span className="text-sm text-gray-600 hidden sm:block">{user.name}</span>

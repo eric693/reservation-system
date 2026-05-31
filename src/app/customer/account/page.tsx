@@ -51,7 +51,7 @@ export default function AccountPage() {
       <div className="p-4 space-y-4">
         {/* Avatar */}
         <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style={{ background: '#8B7355' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style={{ background: 'var(--primary)' }}>
             {user?.name?.[0]?.toUpperCase() || '?'}
           </div>
           <div>
@@ -78,7 +78,7 @@ export default function AccountPage() {
             <input className="w-full border border-gray-100 rounded-xl px-3 py-3 text-sm bg-gray-50 text-gray-400" value={user?.email || ''} disabled />
           </div>
           {profileMsg && <p className={`text-sm ${profileMsg === '已更新' ? 'text-green-600' : 'text-red-500'}`}>{profileMsg}</p>}
-          <button type="submit" disabled={profileLoading} className="w-full py-3 text-white rounded-2xl text-sm font-semibold" style={{ background: '#8B7355', opacity: profileLoading ? 0.7 : 1 }}>
+          <button type="submit" disabled={profileLoading} className="w-full py-3 text-white rounded-2xl text-sm font-semibold" style={{ background: 'var(--primary)', opacity: profileLoading ? 0.7 : 1 }}>
             {profileLoading ? '更新中...' : '儲存變更'}
           </button>
         </form>
@@ -102,7 +102,7 @@ export default function AccountPage() {
               value={pwdForm.confirm_password} onChange={e => setPwdForm(f => ({ ...f, confirm_password: e.target.value }))} required />
           </div>
           {pwdMsg && <p className={`text-sm ${pwdMsg === '密碼已更新' ? 'text-green-600' : 'text-red-500'}`}>{pwdMsg}</p>}
-          <button type="submit" disabled={pwdLoading} className="w-full py-3 rounded-2xl text-sm font-semibold border-2 transition-colors" style={{ borderColor: '#8B7355', color: '#8B7355', opacity: pwdLoading ? 0.7 : 1 }}>
+          <button type="submit" disabled={pwdLoading} className="w-full py-3 rounded-2xl text-sm font-semibold border-2 transition-colors" style={{ borderColor: 'var(--primary)', color: 'var(--primary)', opacity: pwdLoading ? 0.7 : 1 }}>
             {pwdLoading ? '更新中...' : '修改密碼'}
           </button>
         </form>

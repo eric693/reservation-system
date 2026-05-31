@@ -22,11 +22,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #F8F5F0 0%, #EDE8E0 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, var(--bg-page) 0%, var(--bg-page-end) 100%)' }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3" style={{ background: '#8B7355' }}>美</div>
-          <h1 className="text-2xl font-bold" style={{ color: '#8B7355' }}>美甲預約系統</h1>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3" style={{ background: 'var(--primary)' }}>美</div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>美甲預約系統</h1>
         </div>
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
@@ -46,7 +46,7 @@ export default function LoginPage() {
             <input type="email" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-yellow-700" placeholder="Email *" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
             <input type="password" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-yellow-700" placeholder="密碼 *" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
             {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full py-3 rounded-lg text-white font-medium text-sm transition-opacity" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+            <button type="submit" disabled={loading} className="w-full py-3 rounded-lg text-white font-medium text-sm transition-opacity" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
               {loading ? '處理中...' : (tab === 'login' ? '登入' : '註冊')}
             </button>
           </form>

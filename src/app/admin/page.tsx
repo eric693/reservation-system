@@ -33,7 +33,7 @@ export default function AdminDashboard() {
 
   if (!data) return (
     <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} />
+      <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
     </div>
   );
 
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
                 <span className="text-gray-500">{s.count} 單</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${Math.min((s.count / (data.todayTotal || 1)) * 100, 100)}%`, background: '#8B7355' }} />
+                <div className="h-full rounded-full" style={{ width: `${Math.min((s.count / (data.todayTotal || 1)) * 100, 100)}%`, background: 'var(--primary)' }} />
               </div>
             </div>
           ))}
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-gray-800">下一筆預約</h2>
-            <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>待確認</span>
+            <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'var(--badge-bg)', color: 'var(--badge-text)' }}>待確認</span>
           </div>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
               <div className="text-sm text-gray-500 mt-1">{data.nextAppointment.start_time} – {data.nextAppointment.end_time} &nbsp;{data.nextAppointment.service_name} &nbsp;{data.nextAppointment.staff_name} &nbsp;{data.nextAppointment.customer_phone}</div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <button onClick={() => updateStatus(data.nextAppointment.id, 'confirmed')} className="px-3 py-1.5 rounded-lg text-sm text-white" style={{ background: '#8B7355' }}>確認</button>
+              <button onClick={() => updateStatus(data.nextAppointment.id, 'confirmed')} className="px-3 py-1.5 rounded-lg text-sm text-white" style={{ background: 'var(--primary)' }}>確認</button>
               <button onClick={() => updateStatus(data.nextAppointment.id, 'cancelled_customer')} className="px-3 py-1.5 rounded-lg text-sm text-white" style={{ background: '#3B82F6' }}>顧客取消</button>
               <button onClick={() => updateStatus(data.nextAppointment.id, 'cancelled_store')} className="px-3 py-1.5 rounded-lg text-sm text-white" style={{ background: '#EF4444' }}>店家取消</button>
             </div>
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
                   <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: STATUS_COLORS[apt.status] + '20', color: STATUS_COLORS[apt.status] }}>
                     {STATUS_LABELS[apt.status]}
                   </span>
-                  {apt.status === 'pending' && <button onClick={() => updateStatus(apt.id, 'confirmed')} className="px-2 py-1 text-xs rounded text-white" style={{ background: '#8B7355' }}>確認</button>}
+                  {apt.status === 'pending' && <button onClick={() => updateStatus(apt.id, 'confirmed')} className="px-2 py-1 text-xs rounded text-white" style={{ background: 'var(--primary)' }}>確認</button>}
                   {apt.status === 'confirmed' && <button onClick={() => updateStatus(apt.id, 'checkedin')} className="px-2 py-1 text-xs rounded text-white" style={{ background: '#10B981' }}>已到店</button>}
                   {apt.status === 'checkedin' && <button onClick={() => updateStatus(apt.id, 'completed')} className="px-2 py-1 text-xs rounded text-white" style={{ background: '#8B5CF6' }}>完成</button>}
                   {!['completed','cancelled_customer','cancelled_store','cancelled'].includes(apt.status) && (

@@ -30,7 +30,7 @@ export default function ProfilePage() {
       <div className="p-4 space-y-4">
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ background: '#8B7355' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold" style={{ background: 'var(--primary)' }}>
               {user?.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
@@ -40,7 +40,7 @@ export default function ProfilePage() {
           </div>
           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
             <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: '#8B7355' }}>{completed}</div>
+              <div className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>{completed}</div>
               <div className="text-xs text-gray-400">已完成預約</div>
             </div>
             <div className="text-center">
@@ -58,7 +58,7 @@ export default function ProfilePage() {
             { href: '/customer/account', Icon: IconUser, label: '帳號設定' },
           ].map(({ href, Icon, label }) => (
             <Link key={href} href={href} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50">
-              <Icon size={20} color="#8B7355" />
+              <Icon size={20} color="var(--primary)" />
               <span className="flex-1 text-sm font-medium text-gray-700">{label}</span>
               <IconChevronRight size={16} color="#D1D5DB" />
             </Link>

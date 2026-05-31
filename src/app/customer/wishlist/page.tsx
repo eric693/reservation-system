@@ -30,14 +30,14 @@ export default function WishlistPage() {
 
       <div className="p-4">
         {loading ? (
-          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} /></div>
+          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} /></div>
         ) : items.length === 0 ? (
           <div className="text-center py-16">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1C5B5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-warm)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
             <p className="text-gray-400 mb-4 text-sm">還沒有收藏，去作品集收藏喜歡的款式</p>
-            <Link href="/customer/portfolio" className="px-6 py-3 text-white rounded-xl inline-block text-sm font-medium" style={{ background: '#8B7355' }}>瀏覽作品集</Link>
+            <Link href="/customer/portfolio" className="px-6 py-3 text-white rounded-xl inline-block text-sm font-medium" style={{ background: 'var(--primary)' }}>瀏覽作品集</Link>
           </div>
         ) : (
           <>
@@ -56,7 +56,7 @@ export default function WishlistPage() {
                 </div>
               ))}
             </div>
-            <Link href="/customer/booking" className="block w-full py-4 text-center text-white font-semibold rounded-2xl" style={{ background: '#8B7355' }}>
+            <Link href="/customer/booking" className="block w-full py-4 text-center text-white font-semibold rounded-2xl" style={{ background: 'var(--primary)' }}>
               依此靈感板預約
             </Link>
           </>
@@ -73,7 +73,7 @@ export default function WishlistPage() {
               <p className="text-sm text-gray-500 mt-1">{selected.style} · {selected.staff_name}</p>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => { removeBookmark(selected.portfolio_id); setSelected(null); }} className="flex-1 py-3 border border-red-200 text-red-500 rounded-2xl text-sm font-medium">移除收藏</button>
-                <Link href="/customer/booking" className="flex-1 py-3 text-white rounded-2xl text-sm text-center font-semibold" style={{ background: '#8B7355' }}>預約此款</Link>
+                <Link href="/customer/booking" className="flex-1 py-3 text-white rounded-2xl text-sm text-center font-semibold" style={{ background: 'var(--primary)' }}>預約此款</Link>
               </div>
             </div>
           </div>

@@ -39,7 +39,7 @@ export default function StaffPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold text-gray-800">員工列表</h1>
-        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增員工
         </button>
       </div>
@@ -57,7 +57,7 @@ export default function StaffPage() {
         {filtered.map(s => (
           <div key={s.id} className="bg-white rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style={{ background: '#8B7355' }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style={{ background: 'var(--primary)' }}>
                 {s.name[0].toUpperCase()}
               </div>
               <div>
@@ -95,7 +95,7 @@ export default function StaffPage() {
               <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="電話" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
               {!editItem && <input type="password" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" placeholder="密碼（預設 staff123）" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />}
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '儲存中...' : editItem ? '更新' : '新增員工'}
               </button>
             </form>

@@ -30,7 +30,7 @@ export default function CustomerHome() {
   return (
     <div>
       {/* Banner — URL from store_settings.banner_url */}
-      <div className="relative" style={{ height: '240px', overflow: 'hidden', background: '#D4C5B0' }}>
+      <div className="relative" style={{ height: '240px', overflow: 'hidden', background: 'var(--primary-warm)' }}>
         {settings.banner_url && (
           <img src={settings.banner_url} alt="banner" className="w-full h-full object-cover"
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -39,18 +39,18 @@ export default function CustomerHome() {
       </div>
 
       <div className="p-4 space-y-4">
-        <Link href="/customer/booking" className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base shadow-lg" style={{ background: '#8B7355' }}>
+        <Link href="/customer/booking" className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base shadow-lg" style={{ background: 'var(--primary)' }}>
           <IconCalendar size={20} color="white" />
           立即預約
         </Link>
 
         <div className="grid grid-cols-2 gap-3">
           <Link href="/customer/my-appointments" className="bg-white rounded-2xl p-5 flex flex-col items-center gap-2 shadow-sm">
-            <IconList size={28} color="#8B7355" />
+            <IconList size={28} color="var(--primary)" />
             <span className="text-sm font-medium text-gray-700">我的預約</span>
           </Link>
           <Link href="/customer/services" className="bg-white rounded-2xl p-5 flex flex-col items-center gap-2 shadow-sm">
-            <IconScissors size={28} color="#8B7355" />
+            <IconScissors size={28} color="var(--primary)" />
             <span className="text-sm font-medium text-gray-700">服務項目</span>
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default function CustomerHome() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <h2 className="font-semibold text-gray-800">即將到來的預約</h2>
-              <Link href="/customer/my-appointments" className="text-xs" style={{ color: '#8B7355' }}>查看全部</Link>
+              <Link href="/customer/my-appointments" className="text-xs" style={{ color: 'var(--primary)' }}>查看全部</Link>
             </div>
             {upcomingApts.map(apt => (
               <div key={apt.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
@@ -82,7 +82,7 @@ export default function CustomerHome() {
         {/* Store info — all from API */}
         <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style={{ background: '#8B7355' }}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style={{ background: 'var(--primary)' }}>
               {settings.logo_text || settings.store_name?.[0] || '美'}
             </div>
             <h2 className="font-semibold text-gray-800">{settings.store_name || '店家資訊'}</h2>
@@ -90,19 +90,19 @@ export default function CustomerHome() {
           <div className="space-y-2 text-sm text-gray-600">
             {settings.address && (
               <div className="flex items-start gap-2">
-                <IconMapPin size={15} color="#8B7355" />
+                <IconMapPin size={15} color="var(--primary)" />
                 <span>{settings.address}</span>
               </div>
             )}
             {settings.phone && (
               <div className="flex items-center gap-2">
-                <IconPhone size={15} color="#8B7355" />
+                <IconPhone size={15} color="var(--primary)" />
                 <a href={`tel:${settings.phone}`} className="text-blue-600">{settings.phone}</a>
               </div>
             )}
             {settings.email && (
               <div className="flex items-center gap-2">
-                <IconMail size={15} color="#8B7355" />
+                <IconMail size={15} color="var(--primary)" />
                 <span>{settings.email}</span>
               </div>
             )}
@@ -120,8 +120,8 @@ export default function CustomerHome() {
               { Icon: IconCheck, label: '確認預約' },
             ].map(({ Icon, label }, i) => (
               <div key={i} className="flex flex-col items-center gap-1 flex-1 relative z-10">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border-2" style={{ borderColor: '#8B7355' }}>
-                  <Icon size={18} color="#8B7355" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border-2" style={{ borderColor: 'var(--primary)' }}>
+                  <Icon size={18} color="var(--primary)" />
                 </div>
                 <span className="text-xs text-gray-500 text-center leading-tight">{label}</span>
               </div>
@@ -136,7 +136,7 @@ export default function CustomerHome() {
             {announcements.slice(0, 3).map(a => (
               <div key={a.id} className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-1">
-                  {a.is_pinned === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>置頂</span>}
+                  {a.is_pinned === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: 'var(--badge-bg)', color: 'var(--badge-text)' }}>置頂</span>}
                   <h3 className="font-medium text-sm text-gray-800">{a.title}</h3>
                 </div>
                 <p className="text-xs text-gray-500">{a.content}</p>

@@ -31,7 +31,7 @@ export default function ServicesPage() {
           <button key={cat} onClick={() => setActiveCategory(cat)}
             className="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
             style={activeCategory === cat
-              ? { background: '#8B7355', color: 'white', borderColor: '#8B7355' }
+              ? { background: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }
               : { borderColor: '#E5E5E5', color: '#666', background: 'white' }}>
             {cat}
           </button>
@@ -50,13 +50,13 @@ export default function ServicesPage() {
                 <div className="text-sm text-gray-500 mt-1">{s.description}</div>
                 <div className="text-xs text-gray-400 mt-2">時長：{s.duration} 分鐘</div>
               </div>
-              <div className="font-bold text-base flex-shrink-0 ml-3" style={{ color: '#8B7355' }}>NT$ {s.price.toLocaleString()}</div>
+              <div className="font-bold text-base flex-shrink-0 ml-3" style={{ color: 'var(--primary)' }}>NT$ {s.price.toLocaleString()}</div>
             </div>
           </div>
         ))}
         {filtered.length === 0 && <div className="text-center py-12 text-gray-400">此分類暫無服務</div>}
 
-        <Link href="/customer/booking" className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold mt-2" style={{ background: '#8B7355' }}>
+        <Link href="/customer/booking" className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold mt-2" style={{ background: 'var(--primary)' }}>
           立即預約
         </Link>
       </div>

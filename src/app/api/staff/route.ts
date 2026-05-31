@@ -6,7 +6,9 @@ import bcrypt from 'bcryptjs';
 export async function GET() {
   const db = getDb();
   const staff = db.prepare('SELECT s.*, u.email, u.phone FROM staff s LEFT JOIN users u ON s.user_id = u.id WHERE s.is_active = 1 ORDER BY s.id').all();
-  return NextResponse.json(staff);
+  return NextResponse.json(staff, {
+    headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
+  });
 }
 
 export async function POST(req: NextRequest) {

@@ -17,23 +17,27 @@ function isValidImageUrl(url: string): boolean {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const style = searchParams.get('style');
+  const limit = Math.min(Math.max(1, Number(searchParams.get('limit') || 20)), 100);
+  const offset = Math.max(0, Number(searchParams.get('offset') || 0));
   const db = getDb();
 
-  let query = `
+  let where = 'WHERE p.is_active = 1';
+  const params: any[] = [];
+  if (style) { where += ' AND p.style = ?'; params.push(style); }
+
+  const total = (db.prepare(`SELECT COUNT(*) as c FROM portfolio p ${where}`).get(...params) as any).c;
+  const items = db.prepare(`
     SELECT p.id, p.title, p.image_url, p.style, p.views, p.created_at,
            s.name as staff_name, s.username as staff_username,
            sv.name as service_name
     FROM portfolio p
     LEFT JOIN staff s ON p.staff_id = s.id
     LEFT JOIN services sv ON p.service_id = sv.id
-    WHERE p.is_active = 1
-  `;
-  const params: string[] = [];
-  if (style) { query += ' AND p.style = ?'; params.push(style); }
-  query += ' ORDER BY p.created_at DESC';
-
-  const items = db.prepare(query).all(...params);
-  return NextResponse.json(items);
+    ${where}
+    ORDER BY p.created_at DESC
+    LIMIT ? OFFSET ?
+  `).all(...params, limit, offset);
+  return NextResponse.json({ items, total, limit, offset });
 }
 
 export async function POST(req: NextRequest) {

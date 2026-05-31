@@ -39,7 +39,7 @@ export default function WaitlistPage() {
           <h1 className="text-xl font-bold text-gray-800">候補名單</h1>
           <p className="text-sm text-gray-400 mt-0.5">當有人取消，通知候補顧客補位</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 加入候補
         </button>
       </div>
@@ -52,7 +52,7 @@ export default function WaitlistPage() {
             {list.map((item, i) => (
               <div key={item.id} className="flex flex-wrap items-center justify-between px-5 py-4 gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0" style={{ background: '#8B7355' }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0" style={{ background: 'var(--primary)' }}>
                     {i + 1}
                   </div>
                   <div>
@@ -109,7 +109,7 @@ export default function WaitlistPage() {
                   <input type="time" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.preferred_time_end} onChange={e => setForm(f => ({ ...f, preferred_time_end: e.target.value }))} />
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '加入中...' : '加入候補'}
               </button>
             </form>

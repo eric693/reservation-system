@@ -113,13 +113,13 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                        style={{ background: ROLE_COLORS[u.role] || '#8B7355' }}>
+                        style={{ background: ROLE_COLORS[u.role] || 'var(--primary)' }}>
                         {u.name?.[0]?.toUpperCase()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-medium text-gray-800">{u.name}</span>
-                          {u.is_vip === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>VIP</span>}
+                          {u.is_vip === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: 'var(--badge-bg)', color: 'var(--badge-text)' }}>VIP</span>}
                           {u.username && <span className="text-xs text-gray-400">@{u.username}</span>}
                         </div>
                         <div className="text-xs text-gray-400">{u.email}</div>
@@ -217,7 +217,7 @@ export default function UsersPage() {
 
               <div className="flex gap-3">
                 <button type="button" onClick={() => setEditUser(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600">取消</button>
-                <button type="submit" disabled={loading} className="flex-1 py-2.5 text-white rounded-xl text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+                <button type="submit" disabled={loading} className="flex-1 py-2.5 text-white rounded-xl text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                   {loading ? '儲存中...' : '儲存變更'}
                 </button>
               </div>

@@ -49,7 +49,7 @@ export default function PackagesPage() {
           <h1 className="text-xl font-bold text-gray-800">套票管理</h1>
           <p className="text-sm text-gray-400 mt-0.5">預付套票、買多送多，鎖定顧客回流</p>
         </div>
-        <button onClick={() => { setEditItem(null); setForm({ name: '', description: '', service_id: '', total_sessions: 5, bonus_sessions: 1, price: 0, valid_days: 365 }); setShowForm(true); }} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={() => { setEditItem(null); setForm({ name: '', description: '', service_id: '', total_sessions: 5, bonus_sessions: 1, price: 0, valid_days: 365 }); setShowForm(true); }} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增套票
         </button>
       </div>
@@ -64,7 +64,7 @@ export default function PackagesPage() {
             <p className="text-sm text-gray-500 mb-3 min-h-[18px]">{p.description}</p>
             <div className="flex items-center gap-3 mb-3">
               <div className="text-center flex-1 bg-gray-50 rounded-xl py-2">
-                <div className="font-bold text-lg" style={{ color: '#8B7355' }}>{p.total_sessions}</div>
+                <div className="font-bold text-lg" style={{ color: 'var(--primary)' }}>{p.total_sessions}</div>
                 <div className="text-xs text-gray-400">購買堂數</div>
               </div>
               {p.bonus_sessions > 0 && (
@@ -80,7 +80,7 @@ export default function PackagesPage() {
             </div>
             <div className="text-xs text-gray-400 mb-3">有效期：{p.valid_days} 天</div>
             <div className="flex gap-2">
-              <button onClick={() => { setShowSell(p); setSellMsg(''); setSellCustomerId(''); }} className="flex-1 py-2 text-sm text-white rounded-xl font-medium" style={{ background: '#8B7355' }}>售出給顧客</button>
+              <button onClick={() => { setShowSell(p); setSellMsg(''); setSellCustomerId(''); }} className="flex-1 py-2 text-sm text-white rounded-xl font-medium" style={{ background: 'var(--primary)' }}>售出給顧客</button>
               <button onClick={() => openEdit(p)} className="px-3 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50">
                 <IconEdit size={14} color="#6B7280" />
               </button>
@@ -107,7 +107,7 @@ export default function PackagesPage() {
               {customers.map(c => <option key={c.id} value={c.id}>{c.name} {c.phone}</option>)}
             </select>
             {sellMsg && <p className={`text-sm mb-3 ${sellMsg.includes('成功') ? 'text-green-600' : 'text-red-500'}`}>{sellMsg}</p>}
-            <button onClick={sellPackage} disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+            <button onClick={sellPackage} disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
               {loading ? '處理中...' : '確認售出'}
             </button>
           </div>
@@ -135,7 +135,7 @@ export default function PackagesPage() {
                 <div><label className="text-xs text-gray-500 block mb-1">有效天數</label><input type="number" min="30" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.valid_days} onChange={e => setForm(f => ({ ...f, valid_days: Number(e.target.value) }))} /></div>
               </div>
               <div><label className="text-xs text-gray-500 block mb-1">售價（NT$）</label><input type="number" min="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.price} onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))} required /></div>
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>{loading ? '儲存中...' : '儲存'}</button>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>{loading ? '儲存中...' : '儲存'}</button>
             </form>
           </div>
         </div>

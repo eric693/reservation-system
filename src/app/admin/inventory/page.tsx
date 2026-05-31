@@ -58,7 +58,7 @@ export default function InventoryPage() {
           <h1 className="text-xl font-bold text-gray-800">庫存管理</h1>
           {lowStockCount > 0 && <p className="text-sm text-red-500 mt-0.5">{lowStockCount} 項耗材庫存不足，需補貨</p>}
         </div>
-        <button onClick={() => { setEditItem(null); setForm({ name: '', category: '甲油', unit: '瓶', quantity: 0, min_quantity: 5, cost: 0, supplier: '', note: '' }); setShowForm(true); }} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={() => { setEditItem(null); setForm({ name: '', category: '甲油', unit: '瓶', quantity: 0, min_quantity: 5, cost: 0, supplier: '', note: '' }); setShowForm(true); }} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增耗材
         </button>
       </div>
@@ -147,7 +147,7 @@ export default function InventoryPage() {
             <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mb-3" placeholder="備註（選填）" value={adjustNote} onChange={e => setAdjustNote(e.target.value)} />
             <div className="flex gap-2">
               <button onClick={() => setAdjustItem(null)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm">取消</button>
-              <button onClick={submitAdjust} disabled={loading || adjustAmt === 0} className="flex-1 py-2.5 text-white rounded-lg text-sm" style={{ background: '#8B7355', opacity: loading || adjustAmt === 0 ? 0.5 : 1 }}>確認</button>
+              <button onClick={submitAdjust} disabled={loading || adjustAmt === 0} className="flex-1 py-2.5 text-white rounded-lg text-sm" style={{ background: 'var(--primary)', opacity: loading || adjustAmt === 0 ? 0.5 : 1 }}>確認</button>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function InventoryPage() {
                 <div><label className="text-xs text-gray-500 block mb-1">成本（NT$）</label><input type="number" min="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: Number(e.target.value) }))} /></div>
                 <div><label className="text-xs text-gray-500 block mb-1">供應商</label><input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.supplier} onChange={e => setForm(f => ({ ...f, supplier: e.target.value }))} /></div>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>{loading ? '儲存中...' : '儲存'}</button>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>{loading ? '儲存中...' : '儲存'}</button>
             </form>
           </div>
         </div>

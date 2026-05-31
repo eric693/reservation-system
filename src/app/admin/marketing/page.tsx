@@ -40,7 +40,7 @@ export default function MarketingPage() {
           <h1 className="text-xl font-bold text-gray-800">自動行銷</h1>
           <p className="text-sm text-gray-400 mt-0.5">自動偵測沉睡顧客與生日，發送個人化訊息</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增任務
         </button>
       </div>
@@ -56,7 +56,7 @@ export default function MarketingPage() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {data.tasks.map(task => (
           <div key={task.id} className={`bg-white rounded-2xl p-5 shadow-sm border-2 transition-colors ${task.is_active ? '' : 'opacity-60'}`}
-            style={{ borderColor: task.is_active ? '#8B7355' : '#E5E7EB' }}>
+            style={{ borderColor: task.is_active ? 'var(--primary)' : '#E5E7EB' }}>
             <div className="flex justify-between items-start mb-2">
               <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#F3F4F6', color: '#6B7280' }}>{TYPE_LABELS[task.type]}</span>
               <button onClick={() => toggleActive(task)} className={`text-xs px-2 py-0.5 rounded-full font-medium ${task.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
@@ -70,7 +70,7 @@ export default function MarketingPage() {
             {task.last_run && <p className="text-xs text-gray-400 mb-3">上次執行：{task.last_run?.slice(0,10)}</p>}
             <button onClick={() => runTask(task.id)} disabled={running === task.id || !task.is_active}
               className="w-full py-2 text-sm rounded-xl text-white font-medium transition-opacity"
-              style={{ background: '#8B7355', opacity: running === task.id || !task.is_active ? 0.5 : 1 }}>
+              style={{ background: 'var(--primary)', opacity: running === task.id || !task.is_active ? 0.5 : 1 }}>
               {running === task.id ? '發送中...' : '立即執行'}
             </button>
           </div>
@@ -124,7 +124,7 @@ export default function MarketingPage() {
               </div>
               <div><label className="text-xs text-gray-500 block mb-1">折扣（%），0 表示無折扣</label>
                 <input type="number" min="0" max="100" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" value={form.discount_percent} onChange={e => setForm(f => ({ ...f, discount_percent: Number(e.target.value) }))} /></div>
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>{loading ? '儲存中...' : '建立任務'}</button>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>{loading ? '儲存中...' : '建立任務'}</button>
             </form>
           </div>
         </div>

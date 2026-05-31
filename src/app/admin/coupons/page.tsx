@@ -43,7 +43,7 @@ export default function CouponsPage() {
           <h1 className="text-xl font-bold text-gray-800">優惠券管理</h1>
           <p className="text-sm text-gray-400 mt-0.5">折扣碼、滿額折抵，提升預約轉換率</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增優惠券
         </button>
       </div>
@@ -56,7 +56,7 @@ export default function CouponsPage() {
             <div key={c.id} className={`bg-white rounded-2xl p-5 shadow-sm border-2 ${!c.is_active || isExpired || isFull ? 'opacity-60 border-gray-100' : 'border-transparent'}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <div className="font-mono font-bold text-lg tracking-widest" style={{ color: '#8B7355' }}>{c.code}</div>
+                  <div className="font-mono font-bold text-lg tracking-widest" style={{ color: 'var(--primary)' }}>{c.code}</div>
                   <div className="text-sm text-gray-600">{c.name}</div>
                 </div>
                 <div className="text-right">
@@ -124,7 +124,7 @@ export default function CouponsPage() {
                   {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '儲存中...' : '儲存'}
               </button>
             </form>

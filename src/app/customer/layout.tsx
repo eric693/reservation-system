@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 function IconHome({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#8B7355' : 'none'} stroke={active ? '#8B7355' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'var(--primary)' : 'none'} stroke={active ? 'var(--primary)' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
       <path d="M9 22V12h6v10"/>
     </svg>
@@ -13,7 +13,7 @@ function IconHome({ active }: { active: boolean }) {
 }
 function IconCalendar({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#8B7355' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="4" width="18" height="18" rx="2"/>
       <line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/>
@@ -23,7 +23,7 @@ function IconCalendar({ active }: { active: boolean }) {
 }
 function IconBell({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#8B7355' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
       <path d="M13.73 21a2 2 0 01-3.46 0"/>
     </svg>
@@ -31,7 +31,7 @@ function IconBell({ active }: { active: boolean }) {
 }
 function IconImage({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#8B7355' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2"/>
       <circle cx="8.5" cy="8.5" r="1.5"/>
       <path d="M21 15l-5-5L5 21"/>
@@ -40,7 +40,7 @@ function IconImage({ active }: { active: boolean }) {
 }
 function IconUser({ active }: { active: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#8B7355' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : '#9CA3AF'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
       <circle cx="12" cy="7" r="4"/>
     </svg>
@@ -66,7 +66,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
   }, [router]);
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: '#F8F5F0', maxWidth: '480px', margin: '0 auto', position: 'relative' }}>
+    <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg-page)', maxWidth: '480px', margin: '0 auto', position: 'relative' }}>
       <main className="flex-1 pb-20 overflow-y-auto">
         {children}
       </main>
@@ -77,7 +77,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             return (
               <Link key={href} href={href} className="flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors">
                 <Icon active={isActive} />
-                <span className="text-xs" style={{ color: isActive ? '#8B7355' : '#9CA3AF' }}>{label}</span>
+                <span className="text-xs" style={{ color: isActive ? 'var(--primary)' : '#9CA3AF' }}>{label}</span>
               </Link>
             );
           })}

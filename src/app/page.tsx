@@ -17,8 +17,8 @@ export default function Home() {
     });
   }, [router]);
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F8F5F0' }}>
-      <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-page)' }}>
+      <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
     </div>
   );
 }

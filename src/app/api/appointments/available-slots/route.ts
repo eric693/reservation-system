@@ -43,7 +43,17 @@ export async function GET(req: NextRequest) {
   const closeMin = toMinutes(closeTime);
   const slots: string[] = [];
 
-  for (let t = openMin; t + serviceDuration <= closeMin; t += interval) {
+  // Step through every `interval`-minute mark; also insert each booked-slot end time
+  // so we don't miss slots that open up right after a booking ends.
+  const candidates = new Set<number>();
+  for (let t = openMin; t + serviceDuration <= closeMin; t += interval) candidates.add(t);
+  for (const b of bookedSlots) {
+    const endMin = toMinutes(b.end_time);
+    if (endMin + serviceDuration <= closeMin) candidates.add(endMin);
+  }
+
+  for (const t of Array.from(candidates).sort((a, b) => a - b)) {
+    if (t < openMin || t + serviceDuration > closeMin) continue;
     const slotEnd = t + serviceDuration;
     const conflict = bookedSlots.some(b => {
       const bs = toMinutes(b.start_time);

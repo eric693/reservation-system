@@ -55,7 +55,7 @@ export default function BlockedSlotsPage() {
           <h1 className="text-xl font-bold text-gray-800">封鎖時段</h1>
           <p className="text-sm text-gray-400 mt-0.5">手動封鎖特定時段，避免客戶預約</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增封鎖
         </button>
       </div>
@@ -138,7 +138,7 @@ export default function BlockedSlotsPage() {
               </div>
               <button type="submit" disabled={loading}
                 className="w-full py-2.5 text-white rounded-lg text-sm font-medium transition-opacity"
-                style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+                style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '儲存中...' : '確認新增'}
               </button>
             </form>

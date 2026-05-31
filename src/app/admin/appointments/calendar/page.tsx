@@ -57,7 +57,7 @@ export default function CalendarPage() {
           <div className="flex gap-1">
             {(['week','day','month','list'] as const).map(m => (
               <button key={m} onClick={() => setViewMode(m)} className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${viewMode === m ? 'text-white' : 'hover:bg-gray-100'}`}
-                style={viewMode === m ? { background: '#8B7355' } : {}}>
+                style={viewMode === m ? { background: 'var(--primary)' } : {}}>
                 {m === 'week' ? '週' : m === 'day' ? '日' : m === 'month' ? '月' : '列表'}
               </button>
             ))}
@@ -111,7 +111,7 @@ export default function CalendarPage() {
                 const width = `calc((100% - 60px) / 7 - 4px)`;
                 return (
                   <div key={apt.id} className="absolute rounded-lg p-1.5 cursor-pointer text-white text-xs overflow-hidden transition-opacity hover:opacity-90"
-                    style={{ top: `${top}px`, height: `${Math.max(height, 24)}px`, left, width, background: STATUS_COLORS[apt.status] || '#8B7355', zIndex: 10 }}
+                    style={{ top: `${top}px`, height: `${Math.max(height, 24)}px`, left, width, background: STATUS_COLORS[apt.status] || 'var(--primary)', zIndex: 10 }}
                     onClick={() => setSelectedApt(apt)}>
                     <div className="font-medium truncate">{apt.start_time} - {apt.end_time}</div>
                     <div className="truncate">{apt.customer_name} · {apt.staff_name} | {apt.service_name}</div>
@@ -142,7 +142,7 @@ export default function CalendarPage() {
             </div>
             {!['completed','cancelled_customer','cancelled_store','cancelled'].includes(selectedApt.status) && (
               <div className="flex flex-wrap gap-2">
-                {selectedApt.status === 'pending' && <button onClick={() => updateStatus(selectedApt.id, 'confirmed')} className="px-3 py-1.5 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>確認</button>}
+                {selectedApt.status === 'pending' && <button onClick={() => updateStatus(selectedApt.id, 'confirmed')} className="px-3 py-1.5 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>確認</button>}
                 {selectedApt.status === 'confirmed' && <button onClick={() => updateStatus(selectedApt.id, 'checkedin')} className="px-3 py-1.5 text-sm text-white rounded-lg" style={{ background: '#10B981' }}>已到店</button>}
                 {selectedApt.status === 'checkedin' && <button onClick={() => updateStatus(selectedApt.id, 'completed')} className="px-3 py-1.5 text-sm text-white rounded-lg" style={{ background: '#8B5CF6' }}>完成</button>}
                 <button onClick={() => updateStatus(selectedApt.id, 'cancelled_customer')} className="px-3 py-1.5 text-sm text-white rounded-lg" style={{ background: '#3B82F6' }}>顧客取消</button>

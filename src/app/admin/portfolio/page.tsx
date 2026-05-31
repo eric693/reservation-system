@@ -14,7 +14,7 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
 
-  const fetchItems = () => fetch('/api/portfolio').then(r => r.json()).then(setItems);
+  const fetchItems = () => fetch('/api/portfolio?limit=100').then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : (d.items || [])));
   useEffect(() => { fetchItems(); fetch('/api/staff').then(r => r.json()).then(setStaff); }, []);
 
   const styles = Array.from(new Set(items.map(i => i.style).filter(Boolean)));
@@ -48,7 +48,7 @@ export default function PortfolioPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold text-gray-800">作品集管理</h1>
-        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: '#8B7355' }}>
+        <button onClick={openNew} className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg" style={{ background: 'var(--primary)' }}>
           <IconPlus size={16} color="white" /> 新增作品
         </button>
       </div>
@@ -75,7 +75,7 @@ export default function PortfolioPage() {
           <div key={item.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
             <div className="aspect-square overflow-hidden bg-gray-100 relative">
               <img src={item.image_url} alt={item.title} className="w-full h-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).style.background = '#E8E0D8'; (e.target as HTMLImageElement).style.display = 'none'; }} />
+                onError={e => { (e.target as HTMLImageElement).style.background = 'var(--img-error-bg)'; (e.target as HTMLImageElement).style.display = 'none'; }} />
               <div className="absolute top-2 left-2 bg-black/40 text-white text-xs px-1.5 py-0.5 rounded">{item.views} 瀏覽</div>
             </div>
             <div className="p-3">
@@ -117,7 +117,7 @@ export default function PortfolioPage() {
                 {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               {formError && <p className="text-red-500 text-sm">{formError}</p>}
-              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: '#8B7355', opacity: loading ? 0.7 : 1 }}>
+              <button type="submit" disabled={loading} className="w-full py-2.5 text-white rounded-lg text-sm font-medium" style={{ background: 'var(--primary)', opacity: loading ? 0.7 : 1 }}>
                 {loading ? '儲存中...' : '儲存'}
               </button>
             </form>

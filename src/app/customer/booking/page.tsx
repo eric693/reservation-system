@@ -137,7 +137,7 @@ export default function BookingPage() {
               isOff ? 'text-gray-300 cursor-not-allowed line-through' :
               isSelected ? 'text-white font-semibold' :
               'hover:bg-amber-50 text-gray-700'}`}
-          style={isSelected ? { background: '#8B7355' } : isToday && !isSelected ? { border: '2px solid #8B7355', color: '#8B7355' } : {}}>
+          style={isSelected ? { background: 'var(--primary)' } : isToday && !isSelected ? { border: '2px solid var(--primary)', color: 'var(--primary)' } : {}}>
           {d}
           {isOff && !isPast && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] text-gray-300">休</span>}
         </button>
@@ -147,7 +147,7 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8F5F0' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
       {/* Header */}
       <div className="bg-white px-4 pt-4 pb-3 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3 mb-3">
@@ -156,7 +156,7 @@ export default function BookingPage() {
           <span className="text-xs text-gray-400">{step + 1} / {STEPS.length}</span>
         </div>
         <div className="flex gap-1">{STEPS.map((_, i) => (
-          <div key={i} className="flex-1 h-1.5 rounded-full transition-colors" style={{ background: i <= step ? '#8B7355' : '#E5E7EB' }} />
+          <div key={i} className="flex-1 h-1.5 rounded-full transition-colors" style={{ background: i <= step ? 'var(--primary)' : '#E5E7EB' }} />
         ))}</div>
         <div className="text-xs text-center text-gray-400 mt-1">{STEPS[step]}</div>
       </div>
@@ -168,7 +168,7 @@ export default function BookingPage() {
             {services.map(s => (
               <button key={s.id} onClick={() => { setSelected(v => ({ ...v, service: s })); setStep(1); }}
                 className="w-full bg-white rounded-2xl p-4 shadow-sm text-left transition-all hover:shadow-md active:scale-98"
-                style={selected.service?.id === s.id ? { outline: `2px solid #8B7355` } : {}}>
+                style={selected.service?.id === s.id ? { outline: '2px solid var(--primary)' } : {}}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800">{s.name}</div>
@@ -178,7 +178,7 @@ export default function BookingPage() {
                       <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">{s.category}</span>
                     </div>
                   </div>
-                  <div className="font-bold text-base flex-shrink-0 ml-3" style={{ color: '#8B7355' }}>NT$ {s.price.toLocaleString()}</div>
+                  <div className="font-bold text-base flex-shrink-0 ml-3" style={{ color: 'var(--primary)' }}>NT$ {s.price.toLocaleString()}</div>
                 </div>
               </button>
             ))}
@@ -191,8 +191,8 @@ export default function BookingPage() {
             {staff.map(s => (
               <button key={s.id} onClick={() => { setSelected(v => ({ ...v, staff: s })); setStep(2); }}
                 className="w-full bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 hover:shadow-md transition-all"
-                style={selected.staff?.id === s.id ? { outline: `2px solid #8B7355` } : {}}>
-                <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0" style={{ background: '#8B7355' }}>
+                style={selected.staff?.id === s.id ? { outline: '2px solid var(--primary)' } : {}}>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0" style={{ background: 'var(--primary)' }}>
                   {s.name[0].toUpperCase()}
                 </div>
                 <div className="text-left">
@@ -234,7 +234,7 @@ export default function BookingPage() {
                 </h2>
                 {slotsLoading ? (
                   <div className="flex justify-center py-6">
-                    <div className="w-6 h-6 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} />
+                    <div className="w-6 h-6 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
                   </div>
                 ) : slots.length === 0 ? (
                   <div className="text-center py-6">
@@ -247,7 +247,7 @@ export default function BookingPage() {
                       <button key={slot} onClick={() => setSelected(v => ({ ...v, time: slot }))}
                         className="py-2.5 rounded-xl text-sm font-medium transition-all border"
                         style={selected.time === slot
-                          ? { background: '#8B7355', color: 'white', borderColor: '#8B7355' }
+                          ? { background: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }
                           : { borderColor: '#E5E7EB', color: '#374151' }}>
                         {slot}
                       </button>
@@ -258,7 +258,7 @@ export default function BookingPage() {
             )}
 
             {selected.date && selected.time && (
-              <button onClick={() => setStep(3)} className="w-full py-4 rounded-2xl text-white font-semibold shadow-lg" style={{ background: '#8B7355' }}>
+              <button onClick={() => setStep(3)} className="w-full py-4 rounded-2xl text-white font-semibold shadow-lg" style={{ background: 'var(--primary)' }}>
                 下一步，填寫顧客資訊
               </button>
             )}
@@ -291,7 +291,7 @@ export default function BookingPage() {
                 )}
                 <div className="flex justify-between pt-2 border-t border-gray-100">
                   <span className="text-gray-400">實付費用</span>
-                  <span className="font-bold" style={{ color: '#8B7355' }}>
+                  <span className="font-bold" style={{ color: 'var(--primary)' }}>
                     NT$ {(couponResult ? couponResult.final_amount : selected.service?.price).toLocaleString()}
                   </span>
                 </div>
@@ -318,7 +318,7 @@ export default function BookingPage() {
                   />
                   <button onClick={applyCoupon} disabled={!couponCode.trim() || couponLoading}
                     className="px-4 py-2.5 text-white text-sm rounded-xl transition-opacity"
-                    style={{ background: '#8B7355', opacity: !couponCode.trim() ? 0.5 : 1 }}>
+                    style={{ background: 'var(--primary)', opacity: !couponCode.trim() ? 0.5 : 1 }}>
                     {couponLoading ? '…' : '套用'}
                   </button>
                 </div>
@@ -337,7 +337,7 @@ export default function BookingPage() {
 
             <button onClick={submit} disabled={loading || !form.name || !form.phone}
               className="w-full py-4 rounded-2xl text-white font-semibold shadow-lg transition-opacity"
-              style={{ background: '#8B7355', opacity: loading || !form.name || !form.phone ? 0.6 : 1 }}>
+              style={{ background: 'var(--primary)', opacity: loading || !form.name || !form.phone ? 0.6 : 1 }}>
               {loading ? '預約中...' : '確認預約'}
             </button>
           </div>
@@ -363,7 +363,7 @@ export default function BookingPage() {
                     <h3 className="font-bold text-lg">加入候補名單</h3>
                     <p className="text-xs text-gray-400 mt-0.5">{selected.date}・{selected.service?.name}</p>
                   </div>
-                  <button onClick={() => setShowWaitlist(false)} className="text-gray-400 p-1">✕</button>
+                  <button onClick={() => setShowWaitlist(false)} className="text-gray-400 p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
                 <form onSubmit={submitWaitlist} className="space-y-3">
                   <input required className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-amber-600"
@@ -372,7 +372,7 @@ export default function BookingPage() {
                     placeholder="電話 *" value={waitlistForm.phone} onChange={e => setWaitlistForm(f => ({ ...f, phone: e.target.value }))} />
                   <button type="submit" disabled={waitlistLoading}
                     className="w-full py-3 text-white rounded-2xl text-sm font-semibold"
-                    style={{ background: '#8B7355', opacity: waitlistLoading ? 0.7 : 1 }}>
+                    style={{ background: 'var(--primary)', opacity: waitlistLoading ? 0.7 : 1 }}>
                     {waitlistLoading ? '送出中...' : '確認加入候補'}
                   </button>
                 </form>

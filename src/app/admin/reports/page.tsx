@@ -41,7 +41,7 @@ function DailyChart({ apts, days }: { apts: any[]; days: number }) {
       <div className="flex items-end gap-1 h-20 mb-1">
         {counts.map((c, i) => (
           <div key={i} className="flex-1 rounded-t transition-all"
-            style={{ height: `${(c / maxCount) * 80}px`, background: '#8B7355', minHeight: c > 0 ? '4px' : '0', opacity: 0.8 }}
+            style={{ height: `${(c / maxCount) * 80}px`, background: 'var(--primary)', minHeight: c > 0 ? '4px' : '0', opacity: 0.8 }}
             title={`${labels[i]}: ${c} 筆`} />
         ))}
       </div>
@@ -118,7 +118,7 @@ export default function ReportsPage() {
           {[['week','近 7 天'],['month','近 30 天'],['year','近一年']].map(([v,l]) => (
             <button key={v} onClick={() => setPeriod(v)}
               className="px-3 py-1.5 text-sm rounded-lg transition-colors border"
-              style={period === v ? { background: '#8B7355', color: 'white', borderColor: '#8B7355' } : { borderColor: '#E5E5E5', color: '#666' }}>
+              style={period === v ? { background: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' } : { borderColor: '#E5E5E5', color: '#666' }}>
               {l}
             </button>
           ))}
@@ -135,7 +135,7 @@ export default function ReportsPage() {
 
       {!data ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} />
+          <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
         </div>
       ) : (
         <>
@@ -144,7 +144,7 @@ export default function ReportsPage() {
               { label: '總預約數', value: data.total, color: '#3B82F6' },
               { label: '已完成', value: data.completed, color: '#10B981' },
               { label: '已取消', value: data.cancelled, color: '#EF4444' },
-              { label: '完成營收', value: `NT$ ${data.revenue.toLocaleString()}`, color: '#8B7355' },
+              { label: '完成營收', value: `NT$ ${data.revenue.toLocaleString()}`, color: 'var(--primary)' },
             ].map(s => (
               <div key={s.label} className="bg-white rounded-xl p-5 shadow-sm">
                 <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
@@ -169,7 +169,7 @@ export default function ReportsPage() {
                     <span className="text-gray-500">{count as number} 次</span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${((count as number) / (data.total || 1)) * 100}%`, background: '#8B7355' }} />
+                    <div className="h-full rounded-full" style={{ width: `${((count as number) / (data.total || 1)) * 100}%`, background: 'var(--primary)' }} />
                   </div>
                 </div>
               ))}

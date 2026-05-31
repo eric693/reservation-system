@@ -68,7 +68,7 @@ function AppointmentList() {
       <div className="bg-white px-4 pb-3 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         <button onClick={() => setFilterStatus('')}
           className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
-          style={filterStatus === '' ? { background: '#8B7355', color: 'white', borderColor: '#8B7355' } : { borderColor: '#E5E5E5', color: '#666' }}>
+          style={filterStatus === '' ? { background: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' } : { borderColor: '#E5E5E5', color: '#666' }}>
           全部
         </button>
         {ALL_STATUSES.map(s => (
@@ -88,13 +88,13 @@ function AppointmentList() {
         )}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: '#8B7355', borderTopColor: 'transparent' }} />
+            <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
           </div>
         ) : appointments.length === 0 ? (
           <div className="text-center py-16">
-            <div className="flex justify-center mb-3"><IconCalendar size={40} color="#D1C5B5" /></div>
+            <div className="flex justify-center mb-3"><IconCalendar size={40} color="var(--primary-warm)" /></div>
             <p className="text-gray-400 mb-4">沒有符合條件的預約</p>
-            <Link href="/customer/booking" className="px-6 py-3 text-white rounded-xl inline-block text-sm font-medium" style={{ background: '#8B7355' }}>立即預約</Link>
+            <Link href="/customer/booking" className="px-6 py-3 text-white rounded-xl inline-block text-sm font-medium" style={{ background: 'var(--primary)' }}>立即預約</Link>
           </div>
         ) : appointments.map(apt => (
           <div key={apt.id} className="bg-white rounded-2xl p-4 shadow-sm">
@@ -116,11 +116,11 @@ function AppointmentList() {
                 {apt.discount_amount > 0 ? (
                   <span>
                     <span className="line-through text-gray-300 mr-1">NT$ {apt.price.toLocaleString()}</span>
-                    <span className="font-semibold" style={{ color: '#8B7355' }}>NT$ {(apt.price - apt.discount_amount).toLocaleString()}</span>
+                    <span className="font-semibold" style={{ color: 'var(--primary)' }}>NT$ {(apt.price - apt.discount_amount).toLocaleString()}</span>
                     <span className="text-xs text-green-500 ml-1">(-{apt.discount_amount.toLocaleString()})</span>
                   </span>
                 ) : (
-                  <span className="font-semibold" style={{ color: '#8B7355' }}>NT$ {apt.price.toLocaleString()}</span>
+                  <span className="font-semibold" style={{ color: 'var(--primary)' }}>NT$ {apt.price.toLocaleString()}</span>
                 )}
               </div>
             )}
@@ -138,7 +138,9 @@ function AppointmentList() {
                 </button>
               )}
               {apt.status === 'completed' && reviewedIds.has(apt.id) && (
-                <span className="text-xs text-gray-400 self-center">已評價，謝謝 ✓</span>
+                <span className="text-xs text-gray-400 self-center flex items-center gap-1">已評價，謝謝
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+</span>
               )}
             </div>
           </div>
@@ -154,7 +156,7 @@ function AppointmentList() {
                 <h3 className="font-bold text-lg">為本次服務評分</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{reviewApt.service_name}・{reviewApt.staff_name}</p>
               </div>
-              <button onClick={() => setReviewApt(null)} className="text-gray-400 p-1">✕</button>
+              <button onClick={() => setReviewApt(null)} className="text-gray-400 p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
             <form onSubmit={submitReview} className="space-y-4">
               <div className="flex justify-center gap-2">
@@ -171,7 +173,7 @@ function AppointmentList() {
                 value={reviewForm.comment} onChange={e => setReviewForm(f => ({ ...f, comment: e.target.value }))} />
               <button type="submit" disabled={reviewLoading}
                 className="w-full py-3 text-white rounded-2xl text-sm font-semibold"
-                style={{ background: '#8B7355', opacity: reviewLoading ? 0.7 : 1 }}>
+                style={{ background: 'var(--primary)', opacity: reviewLoading ? 0.7 : 1 }}>
                 {reviewLoading ? '送出中...' : '送出評價'}
               </button>
             </form>

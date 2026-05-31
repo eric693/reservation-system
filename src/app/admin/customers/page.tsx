@@ -12,14 +12,14 @@ export default function CustomersPage() {
   const [editNotes, setEditNotes] = useState('');
   const [savingNote, setSavingNote] = useState(false);
 
-  const fetchCustomers = () => fetch('/api/customers').then(r => r.json()).then(setCustomers);
-  useEffect(() => { fetchCustomers(); }, []);
+  const fetchCustomers = () =>
+    fetch(`/api/customers?limit=200&search=${encodeURIComponent(search)}`)
+      .then(r => r.json())
+      .then(d => setCustomers(Array.isArray(d) ? d : (d.customers || [])));
+  useEffect(() => { fetchCustomers(); }, [search]);
 
   const filtered = customers
-    .filter(c =>
-      (!filterVip || c.is_vip) &&
-      (!search || c.name?.includes(search) || c.phone?.includes(search) || c.email?.includes(search))
-    )
+    .filter(c => !filterVip || c.is_vip)
     .sort((a, b) => {
       if (sortBy === 'appointment_count') return b.appointment_count - a.appointment_count;
       if (sortBy === 'total_spent') return (b.total_spent || 0) - (a.total_spent || 0);
@@ -28,7 +28,8 @@ export default function CustomersPage() {
 
   const openDetail = async (c: any) => {
     setSelected(c); setEditNotes(c.notes || '');
-    const apts = await fetch('/api/appointments').then(r => r.json());
+    const res = await fetch(`/api/appointments?limit=100`).then(r => r.json());
+    const apts = Array.isArray(res) ? res : (res.appointments || []);
     setSelectedApts(apts.filter((a: any) => a.customer_user_id === c.id));
   };
 
@@ -101,20 +102,20 @@ export default function CustomersPage() {
                 <tr key={c.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0" style={{ background: '#8B7355' }}>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0" style={{ background: 'var(--primary)' }}>
                         {c.name?.[0]?.toUpperCase()}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-medium">{c.name}</span>
-                          {c.is_vip === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>VIP</span>}
+                          {c.is_vip === 1 && <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: 'var(--badge-bg)', color: 'var(--badge-text)' }}>VIP</span>}
                         </div>
                         {c.notes && <div className="text-xs text-gray-400 truncate max-w-[120px]">{c.notes}</div>}
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3"><div className="text-gray-700">{c.phone}</div><div className="text-xs text-gray-400">{c.email}</div></td>
-                  <td className="px-4 py-3"><span className="font-semibold" style={{ color: '#8B7355' }}>{c.appointment_count}</span> 次</td>
+                  <td className="px-4 py-3"><span className="font-semibold" style={{ color: 'var(--primary)' }}>{c.appointment_count}</span> 次</td>
                   <td className="px-4 py-3 text-gray-700">NT$ {(c.total_spent || 0).toLocaleString()}</td>
                   <td className="px-4 py-3 text-gray-500">{c.last_visit || '—'}</td>
                   <td className="px-4 py-3">
@@ -138,11 +139,11 @@ export default function CustomersPage() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: '#8B7355' }}>{selected.name?.[0]?.toUpperCase()}</div>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--primary)' }}>{selected.name?.[0]?.toUpperCase()}</div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-lg">{selected.name}</h3>
-                    {selected.is_vip === 1 && <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: '#FEF3C7', color: '#92400E' }}>VIP</span>}
+                    {selected.is_vip === 1 && <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: 'var(--badge-bg)', color: 'var(--badge-text)' }}>VIP</span>}
                   </div>
                   <p className="text-sm text-gray-500">{selected.phone} · {selected.email}</p>
                 </div>
@@ -154,7 +155,7 @@ export default function CustomersPage() {
 
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-gray-50 rounded-xl p-3 text-center">
-                <div className="font-bold text-lg" style={{ color: '#8B7355' }}>{selected.appointment_count}</div>
+                <div className="font-bold text-lg" style={{ color: 'var(--primary)' }}>{selected.appointment_count}</div>
                 <div className="text-xs text-gray-400">總預約</div>
               </div>
               <div className="bg-gray-50 rounded-xl p-3 text-center">
@@ -171,7 +172,7 @@ export default function CustomersPage() {
               <label className="text-xs font-medium text-gray-500 mb-1 block">內部備註</label>
               <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-amber-600" rows={2}
                 placeholder="紀錄顧客喜好、過敏史等..." value={editNotes} onChange={e => setEditNotes(e.target.value)} />
-              <button onClick={saveNote} disabled={savingNote} className="mt-1 px-3 py-1 text-xs text-white rounded-lg" style={{ background: '#8B7355', opacity: savingNote ? 0.7 : 1 }}>
+              <button onClick={saveNote} disabled={savingNote} className="mt-1 px-3 py-1 text-xs text-white rounded-lg" style={{ background: 'var(--primary)', opacity: savingNote ? 0.7 : 1 }}>
                 {savingNote ? '儲存中...' : '儲存備註'}
               </button>
             </div>

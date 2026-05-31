@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ui/Toast';
 
 function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
 function fmt(d: Date) { return d.toISOString().split('T')[0]; }
@@ -9,6 +10,8 @@ export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Record<string, any>>({});
   const [weekStart, setWeekStart] = useState(() => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); return d; });
   const [saving, setSaving] = useState<string | null>(null);
+  const [reminding, setReminding] = useState(false);
+  const toast = useToast();
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const startDate = fmt(days[0]); const endDate = fmt(days[6]);
@@ -47,6 +50,15 @@ export default function SchedulesPage() {
 
   const DAY_NAMES = ['週日','週一','週二','週三','週四','週五','週六'];
 
+  const sendReminders = async () => {
+    setReminding(true);
+    const res = await fetch('/api/appointments/remind', { method: 'POST' });
+    const data = await res.json();
+    setReminding(false);
+    if (res.ok) toast(`已發送 ${data.reminded} 則明日預約提醒`, 'success');
+    else toast(data.error || '發送失敗', 'error');
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -55,6 +67,13 @@ export default function SchedulesPage() {
           <p className="text-sm text-gray-400 mt-0.5">設定每位設計師的上班時間，系統自動計算可預約時段</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={sendReminders}
+            disabled={reminding}
+            className="px-3 py-2 text-sm rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+          >
+            {reminding ? '發送中…' : '發送明日預約提醒'}
+          </button>
           <button onClick={() => setWeekStart(d => addDays(d, -7))} className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50">‹</button>
           <span className="text-sm font-medium px-2">{startDate.slice(5).replace('-','/')} – {endDate.slice(5).replace('-','/')}</span>
           <button onClick={() => setWeekStart(d => addDays(d, 7))} className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50">›</button>
@@ -87,7 +106,7 @@ export default function SchedulesPage() {
                 <tr key={s.id}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: '#8B7355' }}>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: 'var(--primary)' }}>
                         {s.name[0]}
                       </div>
                       <span className="text-sm font-medium">{s.name}</span>

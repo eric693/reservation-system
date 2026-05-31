@@ -37,17 +37,20 @@ export async function POST(req: NextRequest) {
   );
 
   const insertLog = db.prepare('INSERT INTO marketing_logs (task_id, customer_user_id, customer_name, message, status) VALUES (?,?,?,?,?)');
-  let count = 0;
-  const sent: string[] = [];
+  const updateLastRun = db.prepare("UPDATE marketing_tasks SET last_run = datetime('now') WHERE id = ?");
 
-  for (const t of targets) {
-    if (alreadySent.has(t.id)) continue; // Skip already messaged today
-    const msg = task.message.replace('{name}', t.name);
-    insertLog.run(task.id, t.id, t.name, msg, 'sent');
-    sent.push(t.name);
-    count++;
-  }
+  const runBatch = db.transaction(() => {
+    const sent: string[] = [];
+    for (const t of targets) {
+      if (alreadySent.has(t.id)) continue;
+      const msg = task.message.replace('{name}', t.name);
+      insertLog.run(task.id, t.id, t.name, msg, 'sent');
+      sent.push(t.name);
+    }
+    updateLastRun.run(task.id);
+    return sent;
+  });
 
-  db.prepare("UPDATE marketing_tasks SET last_run = datetime('now') WHERE id = ?").run(task.id);
-  return NextResponse.json({ sent: count, targets: sent, skipped: targets.length - count });
+  const sent = runBatch();
+  return NextResponse.json({ sent: sent.length, targets: sent, skipped: targets.length - sent.length });
 }
