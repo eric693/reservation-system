@@ -1,216 +1,188 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 
-function DailyChart({ apts, days }: { apts: any[]; days: number }) {
-  const today = new Date();
-  const buckets: { key: string; label: string }[] = [];
-  const countMap: Record<string, number> = {};
+const CHART_COLORS = ['var(--primary)', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#EF4444'];
 
-  if (days >= 365) {
-    // Group by month (12 buckets)
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      buckets.push({ key, label: `${d.getMonth() + 1}月` });
-      countMap[key] = 0;
-    }
-    apts.forEach((a: any) => {
-      const key = a.date?.slice(0, 7);
-      if (key && countMap[key] !== undefined) countMap[key]++;
-    });
-  } else {
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      const label = days <= 7 ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getDate()}`;
-      buckets.push({ key, label });
-      countMap[key] = 0;
-    }
-    apts.forEach((a: any) => {
-      if (a.date && countMap[a.date] !== undefined) countMap[a.date]++;
-    });
-  }
-
-  const counts = buckets.map(b => countMap[b.key]);
-  const labels = buckets.map(b => b.label);
-  const maxCount = Math.max(...counts, 1);
-
+function KpiCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div>
-      <div className="flex items-end gap-1 h-20 mb-1">
-        {counts.map((c, i) => (
-          <div key={i} className="flex-1 rounded-t transition-all"
-            style={{ height: `${(c / maxCount) * 80}px`, background: 'var(--primary)', minHeight: c > 0 ? '4px' : '0', opacity: 0.8 }}
-            title={`${labels[i]}: ${c} 筆`} />
-        ))}
-      </div>
-      <div className="flex gap-1">
-        {labels.map((l, i) => (
-          <div key={i} className="flex-1 text-center text-[9px] text-gray-400 truncate">{l}</div>
-        ))}
-      </div>
+    <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="text-xs text-gray-400 mb-1">{label}</div>
+      <div className="text-2xl font-bold text-gray-800">{value}</div>
+      {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
     </div>
   );
 }
 
 export default function ReportsPage() {
-  const [data, setData] = useState<any>(null);
-  const [apts, setApts] = useState<any[]>([]);
-  const [period, setPeriod] = useState('week');
-
-  const periodDays: Record<string, number> = { week: 7, month: 30, year: 365 };
+  const [revenue, setRevenue] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const today = new Date();
-    const startDate = new Date();
-    if (period === 'week') startDate.setDate(today.getDate() - 7);
-    else if (period === 'month') startDate.setMonth(today.getMonth() - 1);
-    else startDate.setFullYear(today.getFullYear() - 1);
-    const start = startDate.toISOString().split('T')[0];
-    const end = today.toISOString().split('T')[0];
+    setLoading(true);
+    fetch('/api/reports/revenue').then(r => r.json()).then(d => { setRevenue(d); setLoading(false); });
+  }, []);
 
-    fetch(`/api/appointments?startDate=${start}&endDate=${end}`)
-      .then(r => r.json()).then((list: any[]) => {
-        setApts(list);
-        const total = list.length;
-        const completed = list.filter(a => a.status === 'completed').length;
-        const cancelled = list.filter(a => ['cancelled','cancelled_customer','cancelled_store'].includes(a.status)).length;
-        const pending = list.filter(a => a.status === 'pending').length;
-        const revenue = list.filter(a => a.status === 'completed').reduce((s, a) => s + (a.price || 0), 0);
-        const byService: Record<string, number> = {};
-        const byStaff: Record<string, { count: number; revenue: number }> = {};
-        list.forEach(a => {
-          byService[a.service_name] = (byService[a.service_name] || 0) + 1;
-          if (!byStaff[a.staff_name]) byStaff[a.staff_name] = { count: 0, revenue: 0 };
-          byStaff[a.staff_name].count++;
-          if (a.status === 'completed') byStaff[a.staff_name].revenue += a.price || 0;
-        });
-        setData({ total, completed, cancelled, pending, revenue, byService, byStaff });
-      });
-  }, [period]);
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
+    </div>
+  );
 
-  const exportCSV = () => {
-    if (!apts.length) return;
-    const headers = ['ID','顧客姓名','電話','服務','設計師','日期','開始時間','結束時間','狀態','費用','備註'];
-    const statusLabel: Record<string, string> = {
-      pending: '待確認', confirmed: '已確認', checkedin: '已到店',
-      completed: '已完成', cancelled_customer: '顧客取消', cancelled_store: '店家取消', cancelled: '已取消',
-    };
-    const rows = apts.map(a => [
-      a.id, a.customer_name, a.customer_phone, a.service_name, a.staff_name,
-      a.date, a.start_time, a.end_time, statusLabel[a.status] || a.status,
-      a.price || 0, (a.notes || '').replace(/,/g, '，'),
-    ]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `appointments_${period}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-  };
+  const kpis = revenue?.kpis || {};
+  const monthly = (revenue?.monthlyRows || []).map((r: any) => ({
+    ...r, label: r.month?.slice(5) + '月', revenue: r.revenue || 0
+  }));
+  const byCategory = revenue?.byCategory || [];
+  const byStaff = revenue?.byStaff || [];
+  const topServices = revenue?.topServices || [];
+  const peakHours = Array.from({ length: 24 }, (_, h) => {
+    const found = (revenue?.peakHours || []).find((r: any) => r.hour === h);
+    return { hour: `${h}時`, count: found?.count || 0 };
+  }).filter(h => h.count > 0 || (parseInt(h.hour) >= 9 && parseInt(h.hour) <= 21));
+  const retention = revenue?.retention || {};
+
+  const completionRate = kpis.total_appointments > 0
+    ? Math.round((kpis.completed / kpis.total_appointments) * 100) : 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <h1 className="text-xl font-bold text-gray-800">報表列表</h1>
-        <div className="flex gap-2">
-          {[['week','近 7 天'],['month','近 30 天'],['year','近一年']].map(([v,l]) => (
-            <button key={v} onClick={() => setPeriod(v)}
-              className="px-3 py-1.5 text-sm rounded-lg transition-colors border"
-              style={period === v ? { background: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' } : { borderColor: '#E5E5E5', color: '#666' }}>
-              {l}
-            </button>
-          ))}
-          <button onClick={exportCSV} disabled={!apts.length}
-            className="px-3 py-1.5 text-sm rounded-lg border flex items-center gap-1.5 transition-colors hover:bg-gray-50 disabled:opacity-40"
-            style={{ borderColor: '#E5E5E5', color: '#666' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            匯出 CSV
-          </button>
+    <div className="space-y-6 max-w-6xl">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-xl font-bold text-gray-800">營運報表</h1>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">近 30 天 KPI · 即時更新</span>
+          <a href="/api/export/appointments" download className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">匯出預約 CSV</a>
+          <a href="/api/export/customers" download className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">匯出顧客 CSV</a>
         </div>
       </div>
 
-      {!data ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <KpiCard label="總收益" value={`NT$${((kpis.total_revenue || 0) / 1000).toFixed(1)}K`} sub="近 30 天完成" />
+        <KpiCard label="完成預約" value={kpis.completed || 0} sub={`完成率 ${completionRate}%`} />
+        <KpiCard label="平均客單價" value={`NT$${kpis.avg_ticket || 0}`} sub="已完成預約" />
+        <KpiCard label="不重複顧客" value={kpis.unique_customers || 0} sub="近 30 天" />
+        <KpiCard label="回頭客" value={retention.returning_customers || 0} sub={`新客 ${retention.new_customers || 0} 位`} />
+      </div>
+
+      {/* Monthly revenue trend */}
+      <div className="bg-white rounded-xl p-5 shadow-sm">
+        <h2 className="font-semibold text-gray-800 mb-4">月度收益趨勢（近 12 個月）</h2>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={monthly} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${v / 1000}K` : String(v)} />
+            <Tooltip formatter={(v: any) => [`NT$${Number(v).toLocaleString()}`, '收益']} labelStyle={{ fontSize: 12 }} contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB' }} />
+            <Bar dataKey="revenue" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Revenue by category */}
+        <div className="bg-white rounded-xl p-5 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-4">服務類別收益佔比</h2>
+          {byCategory.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-gray-400 text-sm">尚無資料</div>
+          ) : (
+            <div className="flex gap-6 items-center">
+              <ResponsiveContainer width={160} height={160}>
+                <PieChart>
+                  <Pie data={byCategory} dataKey="revenue" nameKey="category" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
+                    {byCategory.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(v: any) => [`NT$${Number(v).toLocaleString()}`, '收益']} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2 flex-1">
+                {byCategory.map((c: any, i: number) => (
+                  <div key={c.category} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                      <span className="text-gray-700">{c.category}</span>
+                    </div>
+                    <span className="text-gray-500 text-xs">NT${(c.revenue / 1000).toFixed(1)}K</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: '總預約數', value: data.total, color: '#3B82F6' },
-              { label: '已完成', value: data.completed, color: '#10B981' },
-              { label: '已取消', value: data.cancelled, color: '#EF4444' },
-              { label: '完成營收', value: `NT$ ${data.revenue.toLocaleString()}`, color: 'var(--primary)' },
-            ].map(s => (
-              <div key={s.label} className="bg-white rounded-xl p-5 shadow-sm">
-                <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                <div className="text-sm text-gray-500 mt-1">{s.label}</div>
+
+        {/* Staff performance */}
+        <div className="bg-white rounded-xl p-5 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-4">設計師業績（近 90 天）</h2>
+          {byStaff.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-gray-400 text-sm">尚無資料</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={byStaff} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${v / 1000}K` : String(v)} />
+                <YAxis dataKey="staff_name" type="category" tick={{ fontSize: 12, fill: '#374151' }} axisLine={false} tickLine={false} width={50} />
+                <Tooltip formatter={(v: any) => [`NT$${Number(v).toLocaleString()}`, '收益']} contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB' }} />
+                <Bar dataKey="revenue" fill="var(--primary)" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+          <div className="mt-3 space-y-1">
+            {byStaff.map((s: any) => (
+              <div key={s.staff_name} className="flex items-center justify-between text-xs text-gray-500">
+                <span>{s.staff_name}</span>
+                <span>{s.completed} 完成 · 均評 {s.avg_rating ?? '—'}</span>
               </div>
             ))}
           </div>
+        </div>
+      </div>
 
-          {/* Daily trend chart */}
-          <div className="bg-white rounded-xl p-5 shadow-sm">
-            <h2 className="font-semibold text-gray-800 mb-4">每日預約趨勢</h2>
-            <DailyChart apts={apts} days={periodDays[period]} />
-          </div>
+      {/* Peak hours */}
+      <div className="bg-white rounded-xl p-5 shadow-sm">
+        <h2 className="font-semibold text-gray-800 mb-4">尖峰時段分析（歷史完成預約）</h2>
+        <ResponsiveContainer width="100%" height={140}>
+          <BarChart data={peakHours} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12 }} />
+            <Bar dataKey="count" fill="var(--primary)" radius={[3, 3, 0, 0]} opacity={0.85} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h2 className="font-semibold text-gray-800 mb-4">服務人氣排行</h2>
-              {Object.entries(data.byService).sort(([,a],[,b]) => (b as number) - (a as number)).map(([name, count]) => (
-                <div key={name} className="mb-3">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-700">{name}</span>
-                    <span className="text-gray-500">{count as number} 次</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${((count as number) / (data.total || 1)) * 100}%`, background: 'var(--primary)' }} />
-                  </div>
-                </div>
+      {/* Top services */}
+      <div className="bg-white rounded-xl p-5 shadow-sm">
+        <h2 className="font-semibold text-gray-800 mb-3">服務項目業績排行</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-xs text-gray-400">
+                <th className="pb-2 text-left">服務</th>
+                <th className="pb-2 text-left">類別</th>
+                <th className="pb-2 text-right">訂價</th>
+                <th className="pb-2 text-right">預約次數</th>
+                <th className="pb-2 text-right">總收益</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {topServices.map((s: any, i: number) => (
+                <tr key={s.name}>
+                  <td className="py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-5 text-gray-400">#{i + 1}</span>
+                      <span className="font-medium text-gray-800">{s.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 text-gray-500">{s.category}</td>
+                  <td className="py-2.5 text-right text-gray-700">NT${s.price.toLocaleString()}</td>
+                  <td className="py-2.5 text-right font-semibold" style={{ color: 'var(--primary)' }}>{s.booking_count}</td>
+                  <td className="py-2.5 text-right font-semibold text-green-600">NT${(s.revenue || 0).toLocaleString()}</td>
+                </tr>
               ))}
-              {Object.keys(data.byService).length === 0 && <div className="text-center text-gray-400 py-4">暫無資料</div>}
-            </div>
-
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <h2 className="font-semibold text-gray-800 mb-4">設計師接單排行</h2>
-              {Object.entries(data.byStaff).sort(([,a],[,b]) => (b as any).count - (a as any).count).map(([name, s]: any) => (
-                <div key={name} className="mb-3">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-700">{name}</span>
-                    <span className="text-gray-500">{s.count} 單 · NT$ {s.revenue.toLocaleString()}</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${(s.count / (data.total || 1)) * 100}%`, background: '#3B82F6' }} />
-                  </div>
-                </div>
-              ))}
-              {Object.keys(data.byStaff).length === 0 && <div className="text-center text-gray-400 py-4">暫無資料</div>}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-5 shadow-sm">
-            <h2 className="font-semibold text-gray-800 mb-3">狀態分佈</h2>
-            <div className="flex gap-4 flex-wrap">
-              {[
-                { label: '已完成', value: data.completed, color: '#10B981' },
-                { label: '待確認', value: data.pending, color: '#F59E0B' },
-                { label: '已取消', value: data.cancelled, color: '#EF4444' },
-              ].map(s => (
-                <div key={s.label} className="flex items-center gap-2 text-sm">
-                  <div className="w-3 h-3 rounded-full" style={{ background: s.color }} />
-                  <span className="text-gray-600">{s.label}</span>
-                  <span className="font-semibold">{data.total > 0 ? Math.round(s.value / data.total * 100) : 0}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+              {topServices.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-gray-400">尚無已完成預約</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

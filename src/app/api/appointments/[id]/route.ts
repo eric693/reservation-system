@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const setClause = Object.keys(updates).map(k => `${k} = ?`).join(', ');
   db.prepare(`UPDATE appointments SET ${setClause}, updated_at = datetime('now') WHERE id = ?`).run(...Object.values(updates), Number(id));
 
-  // Notify customer on status change
+  // Notify customer on status change + earn loyalty points on completion
   if (updates.status && apt.customer_user_id) {
     const statusMessages: Record<string, string> = {
       confirmed: '您的預約已確認',
@@ -49,8 +49,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       cancelled_customer: '您的預約已取消',
     };
     const title = statusMessages[updates.status];
+    const svcRow = db.prepare('SELECT name, price FROM services WHERE id = ?').get(apt.service_id) as any;
     if (title) {
-      const svcRow = db.prepare('SELECT name FROM services WHERE id = ?').get(apt.service_id) as any;
       db.prepare('INSERT INTO notifications (user_id, title, body, type, link) VALUES (?, ?, ?, ?, ?)').run(
         apt.customer_user_id,
         title,
@@ -58,6 +58,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         'appointment',
         '/customer/my-appointments'
       );
+    }
+
+    // Auto-earn points when appointment is completed (and not already earned)
+    if (updates.status === 'completed' && apt.points_earned === 0) {
+      const loyaltySettings = db.prepare('SELECT * FROM loyalty_settings LIMIT 1').get() as any;
+      if (loyaltySettings && svcRow) {
+        const finalPrice = (svcRow.price || 0) - (apt.discount_amount || 0);
+        const earnedPoints = Math.floor(finalPrice * loyaltySettings.earn_rate);
+        if (earnedPoints > 0) {
+          const currentBalance = (db.prepare('SELECT COALESCE(SUM(points),0) as b FROM loyalty_points WHERE user_id = ?').get(apt.customer_user_id) as any).b;
+          db.prepare('INSERT INTO loyalty_points (user_id, points, type, description, appointment_id, balance_after) VALUES (?,?,?,?,?,?)')
+            .run(apt.customer_user_id, earnedPoints, 'earn', `完成預約：${svcRow.name}`, apt.id, currentBalance + earnedPoints);
+          db.prepare('UPDATE appointments SET points_earned = ? WHERE id = ?').run(earnedPoints, apt.id);
+          db.prepare('INSERT INTO notifications (user_id, title, body, type, link) VALUES (?,?,?,?,?)').run(
+            apt.customer_user_id,
+            `獲得 ${earnedPoints} 點積分`,
+            `完成預約「${svcRow.name}」，累計積分 ${currentBalance + earnedPoints} 點`,
+            'loyalty',
+            '/customer/profile'
+          );
+        }
+      }
     }
   }
 

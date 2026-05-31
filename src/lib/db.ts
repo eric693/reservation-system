@@ -298,6 +298,40 @@ function initializeSchema(db: Database.Database) {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS loyalty_points (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      points INTEGER NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('earn','redeem','adjust','expire')),
+      description TEXT DEFAULT '',
+      appointment_id INTEGER REFERENCES appointments(id),
+      balance_after INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS loyalty_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      earn_rate REAL NOT NULL DEFAULT 0.05,
+      redeem_rate REAL NOT NULL DEFAULT 0.01,
+      min_redeem INTEGER NOT NULL DEFAULT 100,
+      expiry_days INTEGER NOT NULL DEFAULT 365
+    );
+
+    CREATE TABLE IF NOT EXISTS customer_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      color TEXT NOT NULL DEFAULT '#6B7280',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS user_tag_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      tag_id INTEGER NOT NULL REFERENCES customer_tags(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, tag_id)
+    );
+
   `);
 
   // Add columns that may not exist in older DBs
@@ -311,6 +345,8 @@ function initializeSchema(db: Database.Database) {
   safeAlter("ALTER TABLE appointments ADD COLUMN coupon_id INTEGER REFERENCES coupons(id)");
   safeAlter("ALTER TABLE appointments ADD COLUMN discount_amount REAL DEFAULT 0");
   safeAlter("ALTER TABLE appointments ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))");
+  safeAlter("ALTER TABLE appointments ADD COLUMN points_earned INTEGER DEFAULT 0");
+  safeAlter("ALTER TABLE appointments ADD COLUMN points_redeemed INTEGER DEFAULT 0");
 
   // Performance indexes
   const idx = (sql: string) => { try { db.exec(sql); } catch {} };
@@ -331,6 +367,25 @@ function initializeSchema(db: Database.Database) {
   idx('CREATE INDEX IF NOT EXISTS idx_blocked_slots_date ON blocked_slots(date, staff_id)');
   idx('CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code)');
   idx('CREATE INDEX IF NOT EXISTS idx_coupon_uses_coupon ON coupon_uses(coupon_id, customer_user_id)');
+  idx('CREATE INDEX IF NOT EXISTS idx_loyalty_user ON loyalty_points(user_id, created_at)');
+  idx('CREATE INDEX IF NOT EXISTS idx_user_tag_links_user ON user_tag_links(user_id)');
+  idx('CREATE INDEX IF NOT EXISTS idx_user_tag_links_tag ON user_tag_links(tag_id)');
+
+  // Seed loyalty settings if not present
+  const lsCount = (db.prepare('SELECT COUNT(*) as c FROM loyalty_settings').get() as any).c;
+  if (lsCount === 0) {
+    db.prepare('INSERT INTO loyalty_settings (earn_rate, redeem_rate, min_redeem, expiry_days) VALUES (0.05, 0.01, 100, 365)').run();
+  }
+  // Seed default customer tags
+  const tagCount = (db.prepare('SELECT COUNT(*) as c FROM customer_tags').get() as any).c;
+  if (tagCount === 0) {
+    const insertTag = db.prepare("INSERT INTO customer_tags (name, color) VALUES (?, ?)");
+    insertTag.run('常客', '#10B981');
+    insertTag.run('新客', '#3B82F6');
+    insertTag.run('推薦來', '#8B5CF6');
+    insertTag.run('注意過敏', '#EF4444');
+    insertTag.run('婚禮/活動', '#F59E0B');
+  }
 
   // Seed default data if empty
   const userCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;

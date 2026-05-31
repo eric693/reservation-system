@@ -8,10 +8,12 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [loyaltyBalance, setLoyaltyBalance] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => d && setUser(d.user));
     fetch('/api/appointments').then(r => r.json()).then(setAppointments);
+    fetch('/api/loyalty').then(r => r.ok ? r.json() : null).then(d => d && setLoyaltyBalance(d.balance ?? 0));
   }, []);
 
   const logout = async () => {
@@ -38,14 +40,18 @@ export default function ProfilePage() {
               <div className="text-sm text-gray-500">{user?.email}</div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
+          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100">
             <div className="text-center">
               <div className="text-2xl font-bold" style={{ color: 'var(--primary)' }}>{completed}</div>
-              <div className="text-xs text-gray-400">已完成預約</div>
+              <div className="text-xs text-gray-400">已完成</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold" style={{ color: '#3B82F6' }}>{upcoming}</div>
               <div className="text-xs text-gray-400">即將到來</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold" style={{ color: '#F59E0B' }}>{loyaltyBalance ?? '—'}</div>
+              <div className="text-xs text-gray-400">積分</div>
             </div>
           </div>
         </div>

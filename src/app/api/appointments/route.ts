@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: '格式錯誤' }, { status: 400 }); }
 
-  const { customer_name, customer_phone, staff_id, service_id, date, start_time, notes, coupon_id, discount_amount } = body;
+  const { customer_name, customer_phone, staff_id, service_id, date, start_time, notes, coupon_id, discount_amount, points_redeem } = body;
 
   // Validate required fields
   if (!customer_name?.trim()) return NextResponse.json({ error: '顧客姓名為必填' }, { status: 400 });
@@ -116,6 +116,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Validate loyalty points redemption
+  let validatedPointsRedeem = 0;
+  if (points_redeem && customerId) {
+    const redeemAmt = Math.max(0, Math.floor(Number(points_redeem)));
+    const loyaltySettings = db.prepare('SELECT * FROM loyalty_settings LIMIT 1').get() as any;
+    const currentBalance = (db.prepare('SELECT COALESCE(SUM(points),0) as b FROM loyalty_points WHERE user_id = ?').get(customerId) as any).b;
+    if (loyaltySettings && redeemAmt >= loyaltySettings.min_redeem && redeemAmt <= currentBalance) {
+      validatedPointsRedeem = redeemAmt;
+      validatedDiscount += Math.floor(redeemAmt * loyaltySettings.redeem_rate);
+    }
+  }
+
   // Wrap conflict-check + insert in a transaction to prevent race conditions
   const bookAppointment = db.transaction(() => {
     const conflict = db.prepare(`
@@ -126,8 +138,8 @@ export async function POST(req: NextRequest) {
     if (conflict) return { error: '此時段已被預約，請選擇其他時段' };
 
     const result = db.prepare(`
-      INSERT INTO appointments (customer_name, customer_phone, customer_user_id, staff_id, service_id, date, start_time, end_time, status, notes, coupon_id, discount_amount)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
+      INSERT INTO appointments (customer_name, customer_phone, customer_user_id, staff_id, service_id, date, start_time, end_time, status, notes, coupon_id, discount_amount, points_redeemed)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
     `).run(
       customer_name.trim().slice(0, 50),
       customer_phone.trim().slice(0, 20),
@@ -139,7 +151,8 @@ export async function POST(req: NextRequest) {
       end_time,
       notes?.trim().slice(0, 500) || '',
       validatedCouponId,
-      validatedDiscount
+      validatedDiscount,
+      validatedPointsRedeem
     ) as any;
 
     const appointmentId = result.lastInsertRowid;
@@ -148,6 +161,13 @@ export async function POST(req: NextRequest) {
     if (validatedCouponId && customerId) {
       db.prepare('INSERT INTO coupon_uses (coupon_id, customer_user_id, appointment_id) VALUES (?, ?, ?)').run(validatedCouponId, customerId, appointmentId);
       db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(validatedCouponId);
+    }
+
+    // Deduct loyalty points
+    if (validatedPointsRedeem > 0 && customerId) {
+      const currentBalance = (db.prepare('SELECT COALESCE(SUM(points),0) as b FROM loyalty_points WHERE user_id = ?').get(customerId) as any).b;
+      db.prepare('INSERT INTO loyalty_points (user_id, points, type, description, appointment_id, balance_after) VALUES (?,?,?,?,?,?)')
+        .run(customerId, -validatedPointsRedeem, 'redeem', '兌換折抵', appointmentId, currentBalance - validatedPointsRedeem);
     }
 
     return { id: appointmentId };
