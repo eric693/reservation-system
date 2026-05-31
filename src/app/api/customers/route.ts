@@ -20,11 +20,12 @@ export async function GET(req: NextRequest) {
   }
 
   const total = (db.prepare(`SELECT COUNT(*) as c FROM users u ${where}`).get(...params) as any).c;
-  const customers = db.prepare(`
+  const rawCustomers = db.prepare(`
     SELECT u.id, u.name, u.email, u.phone, u.created_at, u.notes, u.is_vip,
            COUNT(a.id) as appointment_count,
-           SUM(CASE WHEN a.status = 'completed' THEN sv.price ELSE 0 END) as total_spent,
-           MAX(a.date) as last_visit
+           SUM(CASE WHEN a.status = 'completed' THEN sv.price - COALESCE(a.discount_amount,0) ELSE 0 END) as total_spent,
+           MAX(a.date) as last_visit,
+           COALESCE((SELECT SUM(lp.points) FROM loyalty_points lp WHERE lp.user_id = u.id), 0) as loyalty_balance
     FROM users u
     LEFT JOIN appointments a ON a.customer_user_id = u.id
     LEFT JOIN services sv ON a.service_id = sv.id
@@ -32,6 +33,19 @@ export async function GET(req: NextRequest) {
     GROUP BY u.id
     ORDER BY u.created_at DESC
     LIMIT ? OFFSET ?
-  `).all(...params, limit, offset);
+  `).all(...params, limit, offset) as any[];
+
+  // Attach tag_ids for each customer (used by frontend tag filter)
+  const tagLinks = rawCustomers.length > 0
+    ? db.prepare(`SELECT user_id, tag_id FROM user_tag_links WHERE user_id IN (${rawCustomers.map(() => '?').join(',')})`)
+        .all(...rawCustomers.map(c => c.id)) as any[]
+    : [];
+  const tagMap: Record<number, number[]> = {};
+  for (const l of tagLinks) {
+    if (!tagMap[l.user_id]) tagMap[l.user_id] = [];
+    tagMap[l.user_id].push(l.tag_id);
+  }
+  const customers = rawCustomers.map(c => ({ ...c, tag_ids: tagMap[c.id] || [] }));
+
   return NextResponse.json({ customers, total, limit, offset });
 }

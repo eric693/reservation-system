@@ -18,7 +18,7 @@ export default function PackagesPage() {
   useEffect(() => {
     fetchPackages();
     fetch('/api/services').then(r => r.json()).then(setServices);
-    fetch('/api/customers').then(r => r.json()).then(setCustomers);
+    fetch('/api/customers?limit=500').then(r => r.json()).then(d => setCustomers(Array.isArray(d) ? d : (d.customers || [])));
   }, []);
 
   const openEdit = (p: any) => { setEditItem(p); setForm({ name: p.name, description: p.description || '', service_id: String(p.service_id || ''), total_sessions: p.total_sessions, bonus_sessions: p.bonus_sessions, price: p.price, valid_days: p.valid_days }); setShowForm(true); };

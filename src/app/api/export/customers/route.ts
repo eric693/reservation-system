@@ -7,22 +7,35 @@ export async function GET() {
   if (!session || !['admin', 'staff'].includes(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const db = getDb();
+  // Split into two queries to avoid appointment×tag cartesian product in GROUP_CONCAT
   const rows = db.prepare(`
     SELECT u.id, u.name, u.email, u.phone, u.is_vip, u.notes, u.created_at,
            COUNT(a.id) as appointment_count,
            SUM(CASE WHEN a.status = 'completed' THEN sv.price - COALESCE(a.discount_amount,0) ELSE 0 END) as total_spent,
            MAX(a.date) as last_visit,
-           COALESCE((SELECT SUM(lp.points) FROM loyalty_points lp WHERE lp.user_id = u.id), 0) as loyalty_balance,
-           GROUP_CONCAT(ct.name, '、') as tags
+           COALESCE((SELECT SUM(lp.points) FROM loyalty_points lp WHERE lp.user_id = u.id), 0) as loyalty_balance
     FROM users u
     LEFT JOIN appointments a ON a.customer_user_id = u.id
     LEFT JOIN services sv ON a.service_id = sv.id
-    LEFT JOIN user_tag_links utl ON utl.user_id = u.id
-    LEFT JOIN customer_tags ct ON ct.id = utl.tag_id
     WHERE u.role = 'customer'
     GROUP BY u.id
     ORDER BY u.created_at DESC
   `).all() as any[];
+
+  // Fetch tags separately to avoid duplication
+  const tagRows = rows.length > 0
+    ? db.prepare(`
+        SELECT utl.user_id, ct.name
+        FROM user_tag_links utl
+        JOIN customer_tags ct ON ct.id = utl.tag_id
+        WHERE utl.user_id IN (${rows.map(() => '?').join(',')})
+      `).all(...rows.map((r: any) => r.id)) as any[]
+    : [];
+  const tagsMap: Record<number, string[]> = {};
+  for (const t of tagRows) {
+    if (!tagsMap[t.user_id]) tagsMap[t.user_id] = [];
+    tagsMap[t.user_id].push(t.name);
+  }
 
   const headers = ['ID', '姓名', 'Email', '電話', 'VIP', '積分', '預約次數', '消費總額', '最近到訪', '標籤', '備註', '加入時間'];
   const csvRows = [headers, ...rows.map(r => [
@@ -32,7 +45,7 @@ export async function GET() {
     r.appointment_count || 0,
     r.total_spent || 0,
     r.last_visit || '',
-    (r.tags || '').replace(/,/g, '、'),
+    (tagsMap[r.id] || []).join('、'),
     (r.notes || '').replace(/,/g, '，').replace(/\n/g, ' '),
     r.created_at?.slice(0, 10) || '',
   ])];

@@ -26,6 +26,10 @@ export default function BookingPage() {
   const [waitlistForm, setWaitlistForm] = useState({ name: '', phone: '' });
   const [waitlistLoading, setWaitlistLoading] = useState(false);
   const [waitlistDone, setWaitlistDone] = useState(false);
+  const [loyaltyBalance, setLoyaltyBalance] = useState(0);
+  const [loyaltySettings, setLoyaltySettings] = useState<any>(null);
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -34,6 +38,9 @@ export default function BookingPage() {
     fetch('/api/staff').then(r => r.json()).then(setStaff);
     fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => {
       if (d) setForm(f => ({ ...f, name: d.user.name, phone: d.user.phone || '' }));
+    });
+    fetch('/api/loyalty').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) { setLoyaltyBalance(d.balance || 0); setLoyaltySettings(d.settings); }
     });
   }, []);
 
@@ -97,8 +104,15 @@ export default function BookingPage() {
 
   const removeCoupon = () => { setCouponResult(null); setCouponCode(''); setCouponError(''); };
 
+  const pointsDiscount = usePoints && loyaltySettings
+    ? Math.floor(Math.min(pointsToRedeem, loyaltyBalance) * loyaltySettings.redeem_rate)
+    : 0;
+
   const submit = async () => {
     setLoading(true); setError('');
+    const redeemPoints = usePoints && loyaltySettings && pointsToRedeem >= (loyaltySettings.min_redeem || 100)
+      ? Math.min(pointsToRedeem, loyaltyBalance)
+      : 0;
     const res = await fetch('/api/appointments', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -106,7 +120,8 @@ export default function BookingPage() {
         staff_id: selected.staff.id, service_id: selected.service.id,
         date: selected.date, start_time: selected.time, notes: form.notes,
         coupon_id: couponResult?.coupon_id || null,
-        discount_amount: couponResult?.discount || 0,
+        discount_amount: (couponResult?.discount || 0) + pointsDiscount,
+        points_redeem: redeemPoints,
       })
     });
     const data = await res.json();
@@ -289,10 +304,16 @@ export default function BookingPage() {
                     <span>- NT$ {couponResult.discount.toLocaleString()}</span>
                   </div>
                 )}
+                {usePoints && pointsDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-amber-600">
+                    <span>積分折抵（{Math.min(pointsToRedeem, loyaltyBalance)} 點）</span>
+                    <span>- NT$ {pointsDiscount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-2 border-t border-gray-100">
                   <span className="text-gray-400">實付費用</span>
                   <span className="font-bold" style={{ color: 'var(--primary)' }}>
-                    NT$ {(couponResult ? couponResult.final_amount : selected.service?.price).toLocaleString()}
+                    NT$ {Math.max(0, (selected.service?.price || 0) - (couponResult?.discount || 0) - pointsDiscount).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -325,6 +346,30 @@ export default function BookingPage() {
               )}
               {couponError && <p className="text-xs text-red-500 mt-1.5">{couponError}</p>}
             </div>
+
+            {/* Loyalty points redemption */}
+            {loyaltyBalance > 0 && loyaltySettings && (
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold text-gray-700">積分兌換</h2>
+                  <span className="text-sm" style={{ color: 'var(--primary)' }}>餘額 {loyaltyBalance} 點</span>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer mb-2">
+                  <input type="checkbox" checked={usePoints} onChange={e => { setUsePoints(e.target.checked); if (!e.target.checked) setPointsToRedeem(0); }} className="rounded" />
+                  使用積分折抵（最低 {loyaltySettings.min_redeem} 點，1 點 = NT${loyaltySettings.redeem_rate}）
+                </label>
+                {usePoints && (
+                  <div className="flex items-center gap-2">
+                    <input type="number" min={loyaltySettings.min_redeem} max={loyaltyBalance} step={loyaltySettings.min_redeem}
+                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none"
+                      placeholder={`輸入點數（最低 ${loyaltySettings.min_redeem}）`}
+                      value={pointsToRedeem || ''}
+                      onChange={e => setPointsToRedeem(Math.min(Number(e.target.value), loyaltyBalance))} />
+                    <button onClick={() => setPointsToRedeem(loyaltyBalance)} className="text-xs px-3 py-2 rounded-xl border" style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>全用</button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
               <h2 className="font-semibold text-gray-700">顧客資訊</h2>

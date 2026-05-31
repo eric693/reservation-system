@@ -60,8 +60,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
-    // Auto-earn points when appointment is completed (and not already earned)
-    if (updates.status === 'completed' && apt.points_earned === 0) {
+    // Auto-earn points when appointment is completed (check DB to prevent double-earn on re-patch)
+    const alreadyEarned = db.prepare('SELECT id FROM loyalty_points WHERE appointment_id = ? AND type = ?').get(apt.id, 'earn');
+    if (updates.status === 'completed' && !alreadyEarned) {
       const loyaltySettings = db.prepare('SELECT * FROM loyalty_settings LIMIT 1').get() as any;
       if (loyaltySettings && svcRow) {
         const finalPrice = (svcRow.price || 0) - (apt.discount_amount || 0);
